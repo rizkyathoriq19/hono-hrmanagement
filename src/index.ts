@@ -1,15 +1,35 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
+import { poweredBy } from 'hono/powered-by'
+import { logger } from 'hono/logger'
+import { cors } from 'hono/cors'
+import { connectDB } from '@/config/database.js'
 
-const app = new Hono()
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
+async function init() {
+  try { 
+    const app = new Hono()
+    const PORT = 3000
 
-serve({
-  fetch: app.fetch,
-  port: 3000
-}, (info) => {
-  console.log(`Server is running on http://localhost:${info.port}`)
-})
+    await connectDB()
+    
+    app.use(poweredBy())
+    app.use(logger())
+
+    app.get('/', (c) => {
+      return c.text('Hello Hono!')
+    })
+
+    serve({
+      fetch: app.fetch,
+      port: PORT
+    })
+    
+    console.log(`Server is running on http://localhost:${PORT}`)
+  } catch (error) { 
+    console.error('init err: ', error)
+  }
+}
+
+init()
+
