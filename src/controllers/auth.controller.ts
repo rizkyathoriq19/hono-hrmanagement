@@ -1,8 +1,9 @@
 import type { Context } from "hono";
 import { z } from "zod";
 import { prisma } from "@/lib/encryption.js"
-import { generateToken, type IUserToken } from "@/utils/jwt.js";
+import { generateToken } from "@/utils/jwt.js";
 import type { Employee, UserCredentials } from "@prisma/client";
+import type { IReqUser } from "@/middlewares/auth.middleware.js";
 
 type TRegister = {
     code: string
@@ -127,7 +128,41 @@ export const authController = {
         }
     },
 
-    async me(c: IUserToken) { 
-        return c.json({ message: "me" });
+    async me(c: IReqUser) { 
+        try {
+            const user = c.get("employee")
+            if (!user) return c.json({ error: "Unauthorized" }, 401)
+            
+            const result = await prisma.$queryRaw<{
+                id: string,
+                name: string,
+                code: string,
+                email: string,
+                phone: string,
+                role: string,
+            }[]>`
+                SELECT e.*, r."name" AS role
+                FROM "employee" e
+                JOIN "user_credentials" uc ON uc."employeeId" = e."id"
+                JOIN "role" r ON e."roleId" = r."id"
+                WHERE uc."id" = ${user.id}::uuid
+            `
+
+            if(result.length === 0) {
+                return c.json({ error: "Employee not found" }, 404);
+            }
+
+            return c.json(result[0], 200)            
+        } catch (error) {
+            if (error instanceof z.ZodError) {
+                return c.json(
+                    { error: error.errors.map((e) => e.message).join(", ") },
+                    400
+                );
+            } else if (error instanceof Error) {
+                return c.json({ error: error.message }, 500);
+            }
+            return c.json({ error: "Internal server error" }, 500);  
+        }
     }
 }
