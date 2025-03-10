@@ -4,7 +4,7 @@ export const prisma = new PrismaClient();
 
 async function setupDatabaseExtensions() {
   await prisma.$executeRawUnsafe(`
-    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    CREATE EXTENSION IF NOT EXISTS "pg_uuidv7";
   `);
 
   await prisma.$executeRawUnsafe(`

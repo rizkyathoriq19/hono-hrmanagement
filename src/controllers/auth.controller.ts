@@ -52,11 +52,18 @@ export const authController = {
                 SELECT id FROM "position" WHERE title = $1 LIMIT 1;
             `, position) as { id: string }[];;
 
+            if (!uuidDepartment.length) {
+                return c.json({ error: "Invalid department" }, 400);
+            }
+            if (!uuidPosition.length) {
+                return c.json({ error: "Invalid position" }, 400);
+            }
+
             const roleId = roleMap[role] ?? 2;
 
             const result = await prisma.$queryRawUnsafe<Employee[]>(`
                 INSERT INTO employee ("id", "code", "name", "email", "phone", "departmentId", "positionId", "roleId", "hireDate", "status")
-                VALUES (uuid_generate_v4(), $1, $2, $3, $4, $5::uuid, $6::uuid, $7, NOW(), 'ACTIVE') RETURNING *;
+                VALUES (uuid_generate_v7(), $1, $2, $3, $4, $5::uuid, $6::uuid, $7, NOW(), 'ACTIVE') RETURNING *;
             `, code, name, email, phone, uuidDepartment[0].id, uuidPosition[0].id, roleId)
             
             if (result?.length > 0) {
@@ -66,7 +73,7 @@ export const authController = {
                 const user = await prisma.$transaction(async (sql) => {
                     const userCreate = await sql.$queryRawUnsafe<UserCredentials[]>(`
                         INSERT INTO "user_credentials" ("id", "email", "password", "employeeId", "code")
-                        VALUES (uuid_generate_v4(), $1, $2, $3::uuid, $4) RETURNING *;
+                        VALUES (uuid_generate_v7(), $1, $2, $3::uuid, $4) RETURNING *;
                     `, email, "1234", uuidEmployee, uuidCode);
                 
                 return userCreate[0]
