@@ -62,8 +62,8 @@ export const authController = {
             const roleId = roleMap[role] ?? 2;
 
             const result = await prisma.$queryRawUnsafe<Employee[]>(`
-                INSERT INTO employee ("id", "code", "name", "email", "phone", "departmentId", "positionId", "roleId", "hireDate", "status")
-                VALUES (uuid_generate_v7(), $1, $2, $3, $4, $5::uuid, $6::uuid, $7, NOW(), 'ACTIVE') RETURNING *;
+                INSERT INTO employee ("code", "name", "email", "phone", "departmentId", "positionId", "roleId", "hireDate", "status")
+                VALUES ($1, $2, $3, $4, $5::uuid, $6::uuid, $7, NOW(), 'ACTIVE') RETURNING *;
             `, code, name, email, phone, uuidDepartment[0].id, uuidPosition[0].id, roleId)
             
             if (result?.length > 0) {
@@ -72,14 +72,14 @@ export const authController = {
 
                 const user = await prisma.$transaction(async (sql) => {
                     const userCreate = await sql.$queryRawUnsafe<UserCredentials[]>(`
-                        INSERT INTO "user_credentials" ("id", "email", "password", "employeeId", "code")
-                        VALUES (uuid_generate_v7(), $1, $2, $3::uuid, $4) RETURNING *;
+                        INSERT INTO "user_credentials" ("email", "password", "employeeId", "code")
+                        VALUES ($1, $2, $3::uuid, $4) RETURNING *;
                     `, email, "1234", uuidEmployee, uuidCode);
                 
                 return userCreate[0]
                 })
             
-            return c.json(user, 201)
+            return c.json({data: result, user: user}, 201)
             } else {
                 return c.json({error: "Failed to insert employee"}, 500)
             }
