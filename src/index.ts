@@ -37,7 +37,7 @@ app.get('/doc/openapi.json', (c) => {
           },
           baseurl: {
             default: 'localhost:10000',
-            enum: ['localhost:10000'],
+            enum: ['localhost:10000', 'hono-hrmanagement.vercel.app'],
           },
         }
       }
