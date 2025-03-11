@@ -9,12 +9,68 @@ swagger.openAPIRegistry.registerComponent('securitySchemes', 'Bearer', {
 })
 
 /**
- * 🔹 Route: Register Employee
+ * 🔹 Route: Login Employee
  */
-const registerRoute = createRoute({
+const loginRoute = createRoute({
     method: 'post',
-    path: '/auth/register',
+    path: '/auth/login',
     tags: ['Auth'],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: z.object({
+                            identifier: z.string(),
+                            password: z.string()
+                    })
+                }
+            }
+        }
+    },
+    responses: {
+        200: {
+            description: "Login successful",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        user:
+                            z.object({
+                                id: z.string().uuid(),
+                                roleId: z.number(),
+                            }),
+                        token: z.string()
+                    }),
+                }
+            }
+        },
+        401: {
+            description: "Invalid credentials",
+            content: {
+                "application/json": {
+                    schema: z.object({ error: z.string() })
+                }
+            }
+        },
+        500: {
+            description: "Internal server error",
+            content: {
+                "application/json": {
+                    schema: z.object({ error: z.string() })
+                }
+            }
+        }
+    }
+})
+
+
+/**
+ * 🔹 Route: Add Employee
+ */
+const addEmployeeRoute = createRoute({
+    method: 'post',
+    path: '/employee/add',
+    tags: ['Employee'],
+    security: [{ Bearer: [] }],
     request: {
         body: {
             content: {
@@ -82,68 +138,13 @@ const registerRoute = createRoute({
     }
 })
 
-
 /**
- * 🔹 Route: Login Employee
+ * 🔹 Route: Get Profile Employee
  */
-const loginRoute = createRoute({
-    method: 'post',
-    path: '/auth/login',
-    tags: ['Auth'],
-    request: {
-        body: {
-            content: {
-                "application/json": {
-                    schema: z.object({
-                            identifier: z.string(),
-                            password: z.string()
-                    })
-                }
-            }
-        }
-    },
-    responses: {
-        200: {
-            description: "Login successful",
-            content: {
-                "application/json": {
-                    schema: z.object({
-                        user:
-                            z.object({
-                                id: z.string().uuid(),
-                                roleId: z.number(),
-                            }),
-                        token: z.string()
-                    }),
-                }
-            }
-        },
-        401: {
-            description: "Invalid credentials",
-            content: {
-                "application/json": {
-                    schema: z.object({ error: z.string() })
-                }
-            }
-        },
-        500: {
-            description: "Internal server error",
-            content: {
-                "application/json": {
-                    schema: z.object({ error: z.string() })
-                }
-            }
-        }
-    }
-})
-
-/**
- * 🔹 Route: Get UserByIdentifier
- */
-const getByIdRoute = createRoute({
+const getEmployeeByIdRoute = createRoute({
     method: 'get',
-    path: '/auth/me',
-    tags: ['Auth'],
+    path: '/employee/:id',
+    tags: ['Employee'],
     security: [{ Bearer: [] }],
     responses: {
         200: {
@@ -194,57 +195,9 @@ const getByIdRoute = createRoute({
 })
 
 /**
- * 🔹 Route: Get List Roles
- */
-const getListRolesRoute = createRoute({
-    method: 'get',
-    path: '/auth/list/roles',
-    tags: ['Auth'],
-    security: [{ Bearer: [] }],
-    responses: {
-        200: {
-            description: "Get data successful",
-            content: {
-                "application/json": {
-                    schema: z.object({
-                        status: z.literal(true),
-                        data: z.object({
-                            id: z.number(),
-                            name: z.string(),
-                        }),
-                    })
-                }
-            }
-        },    
-        401: {
-            description: "Unauthorized",
-            content: {
-                "application/json": {
-                    schema: z.object({
-                        status: z.literal(false),
-                        error: z.string()
-                    })
-                }
-            }
-        },        
-        500: {
-            description: "Internal server error",
-            content: {
-                "application/json": {
-                    schema: z.object({
-                        status: z.literal(false),
-                        error: z.string()
-                    })
-                }
-            }
-        }
-    }
-})
-
-/**
  * 🔹 Route: Get Employees
  */
-const getEmployees = createRoute({
+const getEmployeesRoute = createRoute({
     method: 'get',
     path: '/employee/all',
     tags: ['Employee'],
@@ -296,13 +249,70 @@ const getEmployees = createRoute({
     }
 })
 
+/**
+ * 🔹 Route: Update Employee
+ */
+const updateEmployeeRoute = createRoute({
+    method: 'get',
+    path: '/employee/update/:id',
+    tags: ['Employee'],
+    security: [{ Bearer: [] }],
+    responses: {
+        200: {
+            description: "Get data successful",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        id: z.string().uuid(),
+                        name: z.string(),
+                        email: z.string().email(),
+                        phone: z.string(),
+                        departmentId: z.string().uuid(),
+                        positionId: z.string().uuid(),
+                        roleId: z.number(),
+                        hireDate: z.string().datetime(),
+                        status: z.enum(["ACTIVE", "INACTIVE"]),
+                        code: z.string(),
+                        role: z.string(),
+                    }),
+                }
+            }
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: z.object({ error: z.string() })
+                }
+            }
+        },
+        404: {
+            description: "Employee not found",
+            content: {
+                "application/json": {
+                    schema: z.object({ error: z.string() })
+                }
+            }
+        },        
+        500: {
+            description: "Internal server error",
+            content: {
+                "application/json": {
+                    schema: z.object({ error: z.string() })
+                }
+            }
+        }
+    }
+})
+
+
 // Auth
-swagger.openAPIRegistry.registerPath(registerRoute)
 swagger.openAPIRegistry.registerPath(loginRoute)
-swagger.openAPIRegistry.registerPath(getByIdRoute)
-swagger.openAPIRegistry.registerPath(getListRolesRoute)
 
 // Employee
-swagger.openAPIRegistry.registerPath(getEmployees)
+swagger.openAPIRegistry.registerPath(addEmployeeRoute)
+swagger.openAPIRegistry.registerPath(getEmployeesRoute)
+swagger.openAPIRegistry.registerPath(getEmployeeByIdRoute)
+swagger.openAPIRegistry.registerPath(updateEmployeeRoute)
 
 export default swagger
