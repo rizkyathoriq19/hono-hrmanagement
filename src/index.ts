@@ -49,6 +49,7 @@ async function init() {
     
     app.use('/api/v1/*', cors())
     app.route('/api/v1', api)
+    app.get('/', (c) => c.json({ message: 'Welcome to API HR Management' }))
 
     serve({
       fetch: app.fetch,
