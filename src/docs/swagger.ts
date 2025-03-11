@@ -193,8 +193,57 @@ const getByIdRoute = createRoute({
     }
 })
 
+/**
+ * 🔹 Route: Get List Roles
+ */
+const getListRolesRoute = createRoute({
+    method: 'get',
+    path: '/auth/list/roles',
+    tags: ['Auth'],
+    security: [{ Bearer: [] }],
+    responses: {
+        200: {
+            description: "Get data successful",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        status: z.literal(true),
+                        data: z.object({
+                            id: z.number(),
+                            name: z.string(),
+                        }),
+                    })
+                }
+            }
+        },    
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        status: z.literal(false),
+                        error: z.string()
+                    })
+                }
+            }
+        },        
+        500: {
+            description: "Internal server error",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        status: z.literal(false),
+                        error: z.string()
+                    })
+                }
+            }
+        }
+    }
+})
+
 swagger.openAPIRegistry.registerPath(registerRoute)
 swagger.openAPIRegistry.registerPath(loginRoute)
 swagger.openAPIRegistry.registerPath(getByIdRoute)
+swagger.openAPIRegistry.registerPath(getListRolesRoute)
 
 export default swagger

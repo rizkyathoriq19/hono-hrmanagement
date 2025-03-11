@@ -46,18 +46,14 @@ export const authController = {
             
             const uuidDepartment = await prisma.$queryRawUnsafe<{ id: string }[]>(`
                 SELECT id FROM "department" WHERE name = $1 LIMIT 1;
-            `, department) as { id: string }[];
+            `, department) || []
 
             const uuidPosition = await prisma.$queryRawUnsafe<{ id: string }[]>(`
                 SELECT id FROM "position" WHERE title = $1 LIMIT 1;
-            `, position) as { id: string }[];;
+            `, position) || []
 
-            if (!uuidDepartment.length) {
-                return c.json({ error: "Invalid department" }, 400);
-            }
-            if (!uuidPosition.length) {
-                return c.json({ error: "Invalid position" }, 400);
-            }
+            if (!uuidDepartment) return c.json({ error: "Invalid department" }, 400);
+            if (!uuidPosition) return c.json({ error: "Invalid position" }, 400);
 
             const roleId = roleMap[role] ?? 2;
 
@@ -67,8 +63,8 @@ export const authController = {
             `, code, name, email, phone, uuidDepartment[0].id, uuidPosition[0].id, roleId)
             
             if (result?.length > 0) {
-                const uuidEmployee = result[0].id as string;
-                const uuidCode = result[0].code as string;
+                const uuidEmployee: string = result[0].id;
+                const uuidCode: string = result[0].code;
 
                 const user = await prisma.$transaction(async (sql) => {
                     const userCreate = await sql.$queryRawUnsafe<UserCredentials[]>(`
@@ -170,6 +166,28 @@ export const authController = {
                 return c.json({ error: error.message }, 500);
             }
             return c.json({ error: "Internal server error" }, 500);  
+        }
+    },
+
+    async list(c: Context) {
+        try {
+            const user = c.get("employee")
+            if (!user) return c.json({ status: false, error: "Unauthorized" }, 401)
+            
+            const result = await prisma.$queryRaw<{
+                id: string,
+                name: string,
+            }[]>`
+                SELECT r.* AS role
+                FROM "role" r
+            `;
+
+            return c.json({status: true, data: result}, 200);
+        } catch (error) {
+        if (error instanceof Error) {
+            return c.json({ status: false, error: error.message }, 500);
+        }
+        return c.json({status: false, error: "Internal server error" }, 500);             
         }
     }
 }
