@@ -1,6 +1,5 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
-import { handle } from 'hono/vercel'
 import { poweredBy } from 'hono/powered-by'
 import { logger } from 'hono/logger'
 import { cors } from 'hono/cors'
@@ -11,6 +10,7 @@ import { swaggerUI } from '@hono/swagger-ui';
 import swagger from '@/docs/swagger.js';
 
 const app = new Hono()
+const PORT = 10000
 
 await connectDB()
 
@@ -49,13 +49,11 @@ app.use('/api/v1/*', cors())
 app.route('/api/v1', api)
 app.get('/', (c) => c.json({ message: 'Welcome to API HR Management' }))
 
-if (process.env.VERCEL !== '1') { 
-  const PORT: number = Number(process.env.PORT) || 10000
-  serve({
-    fetch: app.fetch,
-    port: PORT
-  })
-  console.log(`Server is running on http://localhost:${PORT}`)
-}
+serve({
+  fetch: app.fetch,
+  port: PORT
+})
 
-export default handle(app)
+console.log(`Server is running on http://localhost:${PORT}`)
+
+export default app
