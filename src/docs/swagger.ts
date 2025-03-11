@@ -138,7 +138,7 @@ const loginRoute = createRoute({
 })
 
 /**
- * 🔹 Route: Get Employee:id
+ * 🔹 Route: Get UserByIdentifier
  */
 const getByIdRoute = createRoute({
     method: 'get',
@@ -241,9 +241,68 @@ const getListRolesRoute = createRoute({
     }
 })
 
+/**
+ * 🔹 Route: Get Employees
+ */
+const getEmployees = createRoute({
+    method: 'get',
+    path: '/employee/all',
+    tags: ['Employee'],
+    security: [{ Bearer: [] }],
+    responses: {
+        200: {
+            description: "Get data successful",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        id: z.string().uuid(),
+                        name: z.string(),
+                        email: z.string().email(),
+                        phone: z.string(),
+                        department: z.string(),
+                        position: z.string(),
+                        role: z.string(),
+                        hireDate: z.string().datetime(),
+                        status: z.enum(["ACTIVE", "INACTIVE"]),
+                        code: z.string(),
+                    }),
+                }
+            }
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: z.object({ error: z.string() })
+                }
+            }
+        },
+        404: {
+            description: "Employee not found",
+            content: {
+                "application/json": {
+                    schema: z.object({ error: z.string() })
+                }
+            }
+        },        
+        500: {
+            description: "Internal server error",
+            content: {
+                "application/json": {
+                    schema: z.object({ error: z.string() })
+                }
+            }
+        }
+    }
+})
+
+// Auth
 swagger.openAPIRegistry.registerPath(registerRoute)
 swagger.openAPIRegistry.registerPath(loginRoute)
 swagger.openAPIRegistry.registerPath(getByIdRoute)
 swagger.openAPIRegistry.registerPath(getListRolesRoute)
+
+// Employee
+swagger.openAPIRegistry.registerPath(getEmployees)
 
 export default swagger

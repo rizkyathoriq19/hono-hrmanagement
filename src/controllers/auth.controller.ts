@@ -37,7 +37,7 @@ const registerValidationSchema = z.object({
 })
 
 export const authController = {
-    async register(c: Context) {
+    async addUser(c: Context) {
         const body = await c.req.json<TRegister>()
         const { code, name, email, phone, department, position, role } = body
 
