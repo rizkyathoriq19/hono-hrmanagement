@@ -201,5 +201,24 @@ export const employeeController = {
             }
             return c.json({ error: "Internal server error" }, 500);             
         }
+    },
+
+    async deleteEmployee(c: Context) {
+        try {
+            const user = c.get("employee")
+            if (!user) return c.json({ error: "Unauthorized" }, 401)
+            
+            const userId = c.req.param("id")
+            const result = await prisma.$queryRawUnsafe<Employee[]>(`
+                DELETE FROM employee WHERE id = $1::uuid
+            `, userId)    
+
+            return c.json({ status: true, message: "Delete Employee Success" }, 200)
+        } catch (error) {
+            if (error instanceof Error) {
+                return c.json({ error: error.message }, 500);
+            }
+            return c.json({ error: "Internal server error" }, 500);             
+        }
     }
 }

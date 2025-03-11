@@ -13,7 +13,7 @@ r.get("/employee/all", authMiddleware, employeeController.getEmployees)
 r.get("/employee/:id", authMiddleware, employeeController.getEmployeeById)
 r.post("/employee/add", authMiddleware, employeeController.addEmployee)
 r.put("/employee/update/:id", authMiddleware, employeeController.updateEmployee)
-// r.delete("/employee/delete/:id", authMiddleware, employeeController.deleteEmployee)
+r.delete("/employee/delete/:id", authMiddleware, employeeController.deleteEmployee)
 
 // Role
 
