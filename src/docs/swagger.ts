@@ -20,8 +20,8 @@ const loginRoute = createRoute({
             content: {
                 "application/json": {
                     schema: z.object({
-                            identifier: z.string(),
-                            password: z.string()
+                            identifier: z.string().default("2503RA001"),
+                            password: z.string().default("1234")
                     })
                 }
             }
@@ -143,9 +143,16 @@ const addEmployeeRoute = createRoute({
  */
 const getEmployeeByIdRoute = createRoute({
     method: 'get',
-    path: '/employee/:id',
+    path: '/employee/{id}',
     tags: ['Employee'],
     security: [{ Bearer: [] }],
+    parameters: [{
+        name: "id",
+        in: "path",
+        required: true,
+        schema: { type: "string", format: "uuid" },
+        description: "The employee ID (must match the logged-in user's ID unless the user has special permissions)."
+    }],
     responses: {
         200: {
             description: "Get data successful",
@@ -254,9 +261,16 @@ const getEmployeesRoute = createRoute({
  */
 const updateEmployeeRoute = createRoute({
     method: 'put',
-    path: '/employee/update/:id',
+    path: '/employee/update/{id}',
     tags: ['Employee'],
     security: [{ Bearer: [] }],
+    parameters: [{
+        name: "id",
+        in: "path",
+        required: true,
+        schema: { type: "string", format: "uuid" },
+        description: "The employee ID (must match the logged-in user's ID unless the user has special permissions)."
+    }],    
     responses: {
         200: {
             description: "Update data successful",
@@ -301,9 +315,16 @@ const updateEmployeeRoute = createRoute({
  */
 const deleteEmployeeRoute = createRoute({
     method: 'delete',
-    path: '/employee/delete/:id',
+    path: '/employee/delete/{id}',
     tags: ['Employee'],
     security: [{ Bearer: [] }],
+    parameters: [{
+        name: "id",
+        in: "path",
+        required: true,
+        schema: { type: "string", format: "uuid" },
+        description: "The employee ID (must match the logged-in user's ID unless the user has special permissions)."
+    }],    
     responses: {
         200: {
             description: "Delete data successful",
@@ -347,9 +368,9 @@ const deleteEmployeeRoute = createRoute({
 swagger.openAPIRegistry.registerPath(loginRoute)
 
 // Employee
-swagger.openAPIRegistry.registerPath(addEmployeeRoute)
 swagger.openAPIRegistry.registerPath(getEmployeesRoute)
 swagger.openAPIRegistry.registerPath(getEmployeeByIdRoute)
+swagger.openAPIRegistry.registerPath(addEmployeeRoute)
 swagger.openAPIRegistry.registerPath(updateEmployeeRoute)
 swagger.openAPIRegistry.registerPath(deleteEmployeeRoute)
 
