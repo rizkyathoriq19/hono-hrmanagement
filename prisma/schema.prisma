@@ -92,13 +92,15 @@ model RolePermission {
 }
 
 model Attendance {
-  id         String          @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  employeeId String          @db.Uuid
-  date       DateTime
-  checkin    DateTime?
-  checkout   DateTime?
-  status     AttendaceStatus
-  employee   Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  id            String          @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  employeeId    String          @db.Uuid
+  date          DateTime
+  checkin       DateTime?
+  checkout      DateTime?
+  workDuration  Int?
+  workStatus    WorkStatus?
+  status        AttendanceStatus
+  employee      Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@map("attendance")
 }
@@ -180,10 +182,17 @@ enum Status {
   INACTIVE
 }
 
-enum AttendaceStatus {
+enum AttendanceStatus {
   PRESENT
   ABSENT
   LATE
+}
+
+enum WorkStatus {
+  FULL_TIME
+  HALF_DAY
+  OVERTIME
+  INSUFFICIENT
 }
 
 enum LeaveStatus {

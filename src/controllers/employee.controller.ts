@@ -1,6 +1,6 @@
 import type { Context } from "hono"
 import { prisma } from "@/lib/encryption.js"
-import { z } from "zod";
+import { z } from "zod"
 import type { Employee, UserCredentials } from "@prisma/client"
 
 type TRegister = {
