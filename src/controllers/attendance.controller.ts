@@ -1,7 +1,7 @@
 import type { Context } from "hono"
 import { prisma } from "@/lib/encryption.js"
 import { z } from "zod"
-import type { Employee } from "@prisma/client"
+import type { Employee, Attendance } from "@prisma/client"
 
 export const attendanceController = {
     async getAll(c: Context) {
@@ -73,7 +73,45 @@ export const attendanceController = {
     },
 
     async checkout(c: Context) { 
+        try {
+            const user = c.get("employee")
+            if (!user) return c.json({ status: false, error: "Unauthorized" }, 401)
+            
+            const attendanceId = c.req.param("id")
+            const attendance = await prisma.$queryRaw<{ id: string, checkin: Date, checkout: Date }[]>`
+                SELECT at.id, at."checkin", at."checkout"
+                FROM attendance at
+                WHERE at.id = ${attendanceId}::uuid AND at."employeeId" = ${user.id}::uuid
+            `
 
+            if (!attendance) return c.json({ status: false, error: "Attendance not found" }, 404)
+            if (attendance[0].checkout) return c.json({ status: false, error: "You already checkout" }, 400)
+            
+            const now = new Date()
+            const workDuration = Math.floor((now.getTime() - new Date(attendance[0].checkin!).getTime()) / 60000)
+            const MIN_FULL_TIME = 480
+            const MIN_HALF_DAY = 240
+            let workStatus: "FULL_TIME" | "HALF_DAY" | "OVERTIME" | "INSUFFICIENT"
+
+            workDuration >= MIN_FULL_TIME && workDuration < MIN_FULL_TIME + 90
+                ? workStatus = "FULL_TIME" : workDuration >= MIN_HALF_DAY && workDuration < MIN_FULL_TIME
+                    ? workStatus = "HALF_DAY" : workDuration >= MIN_FULL_TIME + 90
+                        ? workStatus = "OVERTIME" : workStatus = "INSUFFICIENT"
+            
+            const result = await prisma.$executeRawUnsafe<Attendance[]>(`
+                UPDATE attendance
+                SET "checkout" = NOW(), "workStatus" = $1::"WorkStatus"
+                WHERE id = $2::uuid
+                RETURNING *;
+            `, workStatus, attendanceId) 
+
+            return c.json({ status: true, message: "Checkout success", data: result }, 200)
+        } catch (error) {
+            if (error instanceof Error) {
+                return c.json({ status: false, error: error.message }, 500);
+            }
+            return c.json({status: false, error: "Internal server error" }, 500);             
+        }
     },
 
     async update(c: Context) { },
