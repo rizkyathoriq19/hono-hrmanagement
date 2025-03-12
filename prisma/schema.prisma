@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,184 +8,169 @@ datasource db {
 }
 
 model Employee {
-  id              String      @id       @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  code            String      @unique
+  id              String             @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   name            String
-  email           String      @unique
-  phone           String? 
-  departmentId    String      @db.Uuid
-  positionId      String      @db.Uuid
+  email           String             @unique
+  phone           String?
+  departmentId    String             @db.Uuid
+  positionId      String             @db.Uuid
   roleId          Int
   hireDate        DateTime
   status          Status
-
-  department      Department  @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  position        Position    @relation(fields: [positionId], references: [id], onDelete: Cascade)
-  role            Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
-
+  code            String             @unique
   attendances     Attendance[]
-  payrolls        Payroll[]
-  leaves          Leave[]
-  reimbursements  Reimbursement[]
+  department      Department         @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  position        Position           @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  role            Role               @relation(fields: [roleId], references: [id], onDelete: Cascade)
   trainings       EmployeeTraining[]
+  leaves          Leave[]
   loans           Loan[]
+  payrolls        Payroll[]
+  reimbursements  Reimbursement[]
   userCredentials UserCredentials[]
 
   @@map("employee")
 }
 
 model UserCredentials {
-  id         String @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  code       String @unique
-  email      String @unique
+  id         String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  email      String   @unique
   password   String
-  employeeId String @db.Uuid
-
+  employeeId String   @db.Uuid
+  code       String   @unique
   employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@map("user_credentials")
 }
 
 model Department {
-  id String @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  name String @unique
-
-  positions Position[]
+  id        String     @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  name      String     @unique
   employees Employee[]
+  positions Position[]
 
   @@map("department")
 }
 
 model Position {
-  id String @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  title String
-  departmentId String @db.Uuid
-
-  department Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  employees Employee[]
+  id           String     @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  title        String
+  departmentId String     @db.Uuid
+  employees    Employee[]
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
 
   @@map("position")
 }
 
 model Role {
-  id Int @id @default(autoincrement())
-  name String @unique
-
-  employees Employee[]
+  id          Int              @id @default(autoincrement())
+  name        String           @unique
+  employees   Employee[]
   permissions RolePermission[]
 
   @@map("role")
 }
 
 model Permission {
-  id Int @id @default(autoincrement())
-  name String @unique
+  id          Int              @id @default(autoincrement())
+  name        String           @unique
   description String?
-
-  roles RolePermission[]
+  roles       RolePermission[]
 
   @@map("permission")
 }
 
 model RolePermission {
-  id Int @id @default(autoincrement())
-  roleId Int
+  id           Int        @id @default(autoincrement())
+  roleId       Int
   permissionId Int
-
-  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, permissionId])
   @@map("role_permission")
 }
 
 model Attendance {
-  id String @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  employeeId String @db.Uuid
-  date DateTime
-  checkin DateTime?
-  checkout DateTime?
-  status AttendaceStatus
-
-  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  id         String          @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  employeeId String          @db.Uuid
+  date       DateTime
+  checkin    DateTime?
+  checkout   DateTime?
+  status     AttendaceStatus
+  employee   Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@map("attendance")
 }
 
 model Payroll {
-  id BigInt @id @default(autoincrement())
-  employeeId String @db.Uuid
-  basicSalary Decimal @db.Decimal(10, 2)
-  overtime Decimal @db.Decimal(10, 2)
-  deductions Decimal @db.Decimal(10, 2)
-  netSalary Decimal @db.Decimal(10, 2)
+  id          BigInt   @id @default(autoincrement())
+  employeeId  String   @db.Uuid
+  basicSalary Decimal  @db.Decimal(10, 2)
+  overtime    Decimal  @db.Decimal(10, 2)
+  deductions  Decimal  @db.Decimal(10, 2)
+  netSalary   Decimal  @db.Decimal(10, 2)
   paymentDate DateTime
-
-  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@map("payroll")
 }
 
 model Leave {
-  id BigInt @id @default(autoincrement())
-  employeeId String @db.Uuid
-  leaveType String?
-  startDate DateTime
-  endDate DateTime
-  status LeaveStatus
-
-  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  id         BigInt      @id @default(autoincrement())
+  employeeId String      @db.Uuid
+  leaveType  String?
+  startDate  DateTime
+  endDate    DateTime
+  status     LeaveStatus
+  employee   Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@map("leave")
 }
 
 model Reimbursement {
-  id BigInt @id @default(autoincrement())
-  employeeId String @db.Uuid
-  amount Decimal @db.Decimal(10, 2)
-  category String?
+  id             BigInt              @id @default(autoincrement())
+  employeeId     String              @db.Uuid
+  amount         Decimal             @db.Decimal(10, 2)
+  category       String?
   submissionDate DateTime
-  status ReimbursementStatus
-
-  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  status         ReimbursementStatus
+  employee       Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@map("reimbursement")
 }
 
 model Training {
-  id BigInt @id @default(autoincrement())
-  title String 
+  id          BigInt             @id @default(autoincrement())
+  title       String
   description String?
-  date DateTime
-  trainer String
-
-  employees EmployeeTraining[]
+  date        DateTime
+  trainer     String
+  employees   EmployeeTraining[]
 
   @@map("training")
 }
 
 model EmployeeTraining {
-  id BigInt @id @default(autoincrement())
-  employeeId String @db.Uuid
+  id         BigInt         @id @default(autoincrement())
+  employeeId String         @db.Uuid
   trainingId BigInt
-  status TrainingStatus
-
-  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  training Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  status     TrainingStatus
+  employee   Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  training   Training       @relation(fields: [trainingId], references: [id], onDelete: Cascade)
 
   @@unique([employeeId, trainingId])
   @@map("employee_training")
 }
 
 model Loan {
-  id BigInt @id @default(autoincrement())
-  employeeId String @db.Uuid
-  amount Decimal @db.Decimal(10, 2)
-  loanDate DateTime
-  installment Decimal @db.Decimal(10, 2)
-  status LoanStatus
-
-  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  id          BigInt     @id @default(autoincrement())
+  employeeId  String     @db.Uuid
+  amount      Decimal    @db.Decimal(10, 2)
+  loanDate    DateTime
+  installment Decimal    @db.Decimal(10, 2)
+  status      LoanStatus
+  employee    Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@map("loan")
 }
@@ -209,13 +188,15 @@ enum AttendaceStatus {
 
 enum LeaveStatus {
   PENDING
-  APPROVED
+  APPROVED_BY_MANAGER
+  APPROVED_BY_HR
   REJECTED
 }
 
 enum ReimbursementStatus {
   PENDING
-  APPROVED
+  APPROVED_BY_MANAGER
+  APPROVED_BY_HR
   REJECTED
 }
 

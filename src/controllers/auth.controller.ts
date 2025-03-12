@@ -18,7 +18,7 @@ export const authController = {
                 id: string,
                 role: string,
             }[]>`
-                    SELECT uc.id, e."roleId"
+                    SELECT e.id, e."roleId" as role
                     FROM "user_credentials" uc
                     JOIN "employee" e ON uc."employeeId" = e."id"
                     WHERE (uc.code = ${identifier} OR uc.email = ${identifier})

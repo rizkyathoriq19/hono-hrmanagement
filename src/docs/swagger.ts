@@ -253,27 +253,18 @@ const getEmployeesRoute = createRoute({
  * 🔹 Route: Update Employee
  */
 const updateEmployeeRoute = createRoute({
-    method: 'get',
+    method: 'put',
     path: '/employee/update/:id',
     tags: ['Employee'],
     security: [{ Bearer: [] }],
     responses: {
         200: {
-            description: "Get data successful",
+            description: "Update data successful",
             content: {
                 "application/json": {
                     schema: z.object({
-                        id: z.string().uuid(),
-                        name: z.string(),
-                        email: z.string().email(),
-                        phone: z.string(),
-                        departmentId: z.string().uuid(),
-                        positionId: z.string().uuid(),
-                        roleId: z.number(),
-                        hireDate: z.string().datetime(),
-                        status: z.enum(["ACTIVE", "INACTIVE"]),
-                        code: z.string(),
-                        role: z.string(),
+                        status: z.boolean(),
+                        message: z.string(),
                     }),
                 }
             }
@@ -305,6 +296,52 @@ const updateEmployeeRoute = createRoute({
     }
 })
 
+/**
+ * 🔹 Route: Delete Employee
+ */
+const deleteEmployeeRoute = createRoute({
+    method: 'delete',
+    path: '/employee/delete/:id',
+    tags: ['Employee'],
+    security: [{ Bearer: [] }],
+    responses: {
+        200: {
+            description: "Delete data successful",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        status: z.boolean(),
+                        message: z.string(),
+                    }),
+                }
+            }
+        },
+        401: {
+            description: "Unauthorized",
+            content: {
+                "application/json": {
+                    schema: z.object({ error: z.string() })
+                }
+            }
+        },
+        404: {
+            description: "Employee not found",
+            content: {
+                "application/json": {
+                    schema: z.object({ error: z.string() })
+                }
+            }
+        },        
+        500: {
+            description: "Internal server error",
+            content: {
+                "application/json": {
+                    schema: z.object({ error: z.string() })
+                }
+            }
+        }
+    }
+})
 
 // Auth
 swagger.openAPIRegistry.registerPath(loginRoute)
@@ -314,5 +351,6 @@ swagger.openAPIRegistry.registerPath(addEmployeeRoute)
 swagger.openAPIRegistry.registerPath(getEmployeesRoute)
 swagger.openAPIRegistry.registerPath(getEmployeeByIdRoute)
 swagger.openAPIRegistry.registerPath(updateEmployeeRoute)
+swagger.openAPIRegistry.registerPath(deleteEmployeeRoute)
 
 export default swagger

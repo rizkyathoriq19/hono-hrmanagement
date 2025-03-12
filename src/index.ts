@@ -4,10 +4,10 @@ import { poweredBy } from 'hono/powered-by'
 import { logger } from 'hono/logger'
 import { cors } from 'hono/cors'
 import { connectDB } from '@/config/database.js'
-import "@/lib/encryption.js"
 import api from '@/routes/api.js'
 import { swaggerUI } from '@hono/swagger-ui';
 import swagger from '@/docs/swagger.js';
+import "@/lib/encryption.js"
 
 const app = new Hono()
 const PORT = 10000

@@ -42,30 +42,31 @@ const registerValidationSchema = z.object({
 
 export const employeeController = {
     async getEmployees(c: Context) { 
+        let result: Employee[] = []
         try {
             const user = c.get("employee")
             if (!user) return c.json({ error: "Unauthorized" }, 401);
 
-            const result = await prisma.$queryRaw<{
-                id: string,
-                name: string,
-                email: string,
-                phone: string,
-                department: string,
-                position: string,
-                role: string,
-                hireDate: string,
-                status: string,
-                code: string,
-            }[]>`
-                SELECT e.id, e.name, e.email, e.phone, d.name as department, p.title as position, r.name as role, e."hireDate", e.status, e.code
-                FROM employee e
-                JOIN department d ON e."departmentId" = d.id
-                JOIN position p ON e."positionId" = p.id
-                JOIN role r ON e."roleId" = r.id
-            `
+            if (user.role === "HR") {
+                result = await prisma.$queryRaw`
+                    SELECT e.id, e.name, e.email, e.phone, d.name as department, p.title as position, r.name as role, e."hireDate", e.status, e.code
+                    FROM employee e
+                    JOIN department d ON e."departmentId" = d.id
+                    JOIN position p ON e."positionId" = p.id
+                    JOIN role r ON e."roleId" = r.id
+                `
+            } else if (user.role === "Manager") { 
+                result = await prisma.$queryRaw`
+                    SELECT e.id, e.name, e.email, e.phone, d.name as department, p.title as position, r.name as role, e."hireDate", e.status, e.code
+                    FROM employee e
+                    JOIN department d ON e."departmentId" = d.id
+                    JOIN position p ON e."positionId" = p.id
+                    JOIN role r ON e."roleId" = r.id
+                    WHERE e."departmentId" = (SELECT "departmentId" FROM employee WHERE id = ${user.id}::uuid)
+                `
+            } else return c.json({ status: false, error: "Forbidden" }, 403);
 
-            return c.json({ status: true, data: result }, 200);
+            return c.json({ status: true, message:"Get all employee data success", data: result }, 200);
         } catch (error) {
         if (error instanceof Error) {
             return c.json({ status: false, error: error.message }, 500);
@@ -146,18 +147,17 @@ export const employeeController = {
                 phone: string,
                 role: string,
             }[]>`
-                SELECT e.*, r."name" AS role
+                SELECT e.*
                 FROM "employee" e
                 JOIN "user_credentials" uc ON uc."employeeId" = e."id"
-                JOIN "role" r ON e."roleId" = r."id"
-                WHERE uc."id" = ${userId}::uuid
+                WHERE e."id" = ${userId}::uuid
             `
-
+            console.log(111, result)
             if(result.length === 0) {
                 return c.json({ error: "Employee not found" }, 404);
             }
 
-            return c.json(result[0], 200)            
+            return c.json({status: true, message: "Get data success", data: result[0]}, 200)            
         } catch (error) {
             if (error instanceof Error) {
                 return c.json({ error: error.message }, 500);
@@ -172,6 +172,11 @@ export const employeeController = {
             if (!user) return c.json({ error: "Unauthorized" }, 401)
             
             const userId = c.req.param("id")
+
+            if (user.role === "Staff" && user.id !== userId) { 
+                return c.json({ status: false, error: "Forbidden" }, 403);
+            }
+
             const body = await c.req.json<TUpdate>()
             const { code, name, email, phone, department, position, role, status } = body
             
@@ -209,6 +214,11 @@ export const employeeController = {
             if (!user) return c.json({ error: "Unauthorized" }, 401)
             
             const userId = c.req.param("id")
+
+            if ((user.role === "Staff"  || user.role === "Manager") && user.id !== userId) { 
+                return c.json({ status: false, error: "Forbidden" }, 403);
+            }
+            
             const result = await prisma.$queryRawUnsafe<Employee[]>(`
                 DELETE FROM employee WHERE id = $1::uuid
             `, userId)    
