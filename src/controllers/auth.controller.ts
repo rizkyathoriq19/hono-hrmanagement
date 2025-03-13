@@ -2,6 +2,7 @@ import type { Context } from "hono";
 import { z } from "zod";
 import { prisma } from "@/lib/encryption.js"
 import { generateToken } from "@/utils/jwt.js";
+import { authModel } from "@/models/auth.model";
 
 type TLogin = {
     identifier: string
@@ -14,16 +15,7 @@ export const authController = {
         const { identifier, password } = body
 
         try {
-            const userByIdentifier = await prisma.$queryRaw<{
-                id: string,
-                role: string,
-            }[]>`
-                    SELECT e.id, e."roleId" as role
-                    FROM "user_credentials" uc
-                    JOIN "employee" e ON uc."employeeId" = e."id"
-                    WHERE (uc.code = ${identifier} OR uc.email = ${identifier})
-                    AND uc.password = crypt(${password}, uc.password)
-                `
+            const userByIdentifier = await authModel.userByIdentifier(identifier, password)
             
             if(userByIdentifier.length === 0) {
                 return c.json({ error: "Invalid credentials" }, 401);
