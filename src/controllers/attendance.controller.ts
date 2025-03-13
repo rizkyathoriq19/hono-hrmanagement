@@ -1,6 +1,5 @@
 import type { Context } from "hono"
 import { prisma } from "@/lib/encryption.js"
-import { z } from "zod"
 import type { Employee, Attendance } from "@prisma/client"
 
 export const attendanceController = {
@@ -12,7 +11,7 @@ export const attendanceController = {
             
             if (user.role === "HR") {
                 result = await prisma.$queryRaw`
-                    SELECT at.id, e.name as employee, d.name as department, p.title as position, at.checkin, at.checkout, at.date, at.status
+                    SELECT at.id, e.name as employee, d.name as department, p.title as position, at.checkin, at.checkout, at.date, at."workStatus", at."workDuration", at.status
                     FROM attendance at
                     JOIN employee e ON at."employeeId" = e.id
                     JOIN department d ON e."departmentId" = d.id
@@ -20,7 +19,7 @@ export const attendanceController = {
                 `
             } else if (user.role === "Manager") {
                 result = await prisma.$queryRaw`
-                    SELECT at.id, e.name as employee, d.name as department, p.title as position, at.checkin, at.checkout, at.date, at.status
+                    SELECT at.id, e.name as employee, d.name as department, p.title as position, at.checkin, at.checkout, at.date, at."workStatus", at."workDuration", at.status
                     FROM attendance at
                     JOIN employee e ON at."employeeId" = e.id
                     JOIN department d ON e."departmentId" = d.id
@@ -46,18 +45,7 @@ export const attendanceController = {
             const userId = c.req.param("id")
             if (!userId) return c.json({ status: false, error: "User not found" }, 403);
 
-            const result = await prisma.$queryRaw <{
-                id: string,
-                employee: string,
-                department: string,
-                position: string,
-                checkin: Date,
-                checkout: Date,
-                date: Date,
-                workStatus: "FULL_TIME" | "HALF_DAY" | "OVERTIME" | "INSUFFICIENT",
-                workDuration: number,
-                status: "PRESENT" | "ABSENT" | "LATE"
-            }[]>`
+            const result = await prisma.$queryRaw <Attendance[]>`
                 SELECT at.id, e.name as employee, d.name as department, p.title as position, at.checkin, at.checkout, at.date, at."workStatus", at."workDuration", at.status
                 FROM attendance at
                 JOIN employee e ON at."employeeId" = e.id
@@ -136,11 +124,17 @@ export const attendanceController = {
                     ? workStatus = "HALF_DAY" : workDuration >= MIN_FULL_TIME + OVERTIME_BUFFER
                         ? workStatus = "OVERTIME" : workStatus = "INSUFFICIENT"
             
-            const result = await prisma.$queryRawUnsafe<Attendance[]>(`
+            const result = await prisma.$queryRawUnsafe<{
+                id: string,
+                checkin: Date,
+                checkout: Date,
+                workStatus: "FULL_TIME" | "HALF_DAY" | "OVERTIME" | "INSUFFICIENT",
+                workDuration: number
+            }[]>(`
                 UPDATE attendance
                 SET "checkout" = NOW(), "workStatus" = $1::"WorkStatus", "workDuration" = $2
                 WHERE id = $3::uuid
-                RETURNING id, "checkin", "checkout", "workStatus", "workDuration";
+                RETURNING id, date, checkin, checkout, "workStatus", "workDuration";
             `, workStatus, workDuration, attendanceId) 
 
             return c.json({ status: true, message: "Checkout success", data: result[0] }, 200)
