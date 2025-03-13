@@ -1,39 +1,23 @@
 import type { Context } from "hono"
 import { prisma } from "@/lib/encryption.js"
-import type { Employee, Attendance } from "@prisma/client"
+import { attendanceModel } from "@/models/attendance"
 
 export const attendanceController = {
     async getAll(c: Context) {
-        let result: Employee[] = []
         try {
             const user = c.get("employee")
             if (!user) return c.json({ status: false, error: "Unauthorized" }, 401);
             
-            if (user.role === "HR") {
-                result = await prisma.$queryRaw`
-                    SELECT at.id, e.name as employee, d.name as department, p.title as position, at.checkin, at.checkout, at.date, at."workStatus", at."workDuration", at.status
-                    FROM attendance at
-                    JOIN employee e ON at."employeeId" = e.id
-                    JOIN department d ON e."departmentId" = d.id
-                    JOIN position p ON e."positionId" = p.id
-                `
-            } else if (user.role === "Manager") {
-                result = await prisma.$queryRaw`
-                    SELECT at.id, e.name as employee, d.name as department, p.title as position, at.checkin, at.checkout, at.date, at."workStatus", at."workDuration", at.status
-                    FROM attendance at
-                    JOIN employee e ON at."employeeId" = e.id
-                    JOIN department d ON e."departmentId" = d.id
-                    JOIN position p ON e."positionId" = p.id
-                    WHERE e."departmentId" = (SELECT "departmentId" FROM employee WHERE id = ${user.id}::uuid)
-                `                
-            } else return c.json({ status: false, error: "Forbidden" }, 403);
+            const result = await attendanceModel.getAttendances(user.role, user.id)
+            console.log(111, result)
+            if (!result) return c.json({ status: false, error: "Forbidden" }, 403);
 
             return c.json({ status: true, message: "Get attendance success",  data: result }, 200);
         } catch (error) {
-            if (error instanceof Error) {
-                return c.json({ status: false, error: error.message }, 500);
-            }
-            return c.json({status: false, error: "Internal server error" }, 500);            
+            return c.json({
+                status: false,
+                error: error instanceof Error ? error.message : "Internal server error"
+            }, 500)        
         }
     },
 
@@ -45,21 +29,15 @@ export const attendanceController = {
             const userId = c.req.param("id")
             if (!userId) return c.json({ status: false, error: "User not found" }, 403);
 
-            const result = await prisma.$queryRaw <Attendance[]>`
-                SELECT at.id, e.name as employee, d.name as department, p.title as position, at.checkin, at.checkout, at.date, at."workStatus", at."workDuration", at.status
-                FROM attendance at
-                JOIN employee e ON at."employeeId" = e.id
-                JOIN department d ON e."departmentId" = d.ID
-                JOIN position p ON e."positionId" = p.id
-                WHERE at."employeeId" = ${userId}::uuid
-            `
+            const result = await attendanceModel.getAttendanceById(userId)
+            if (!result.length) return c.json({ status: false, error: "Forbidden" }, 403);
 
             return c.json({ status: true, message: "Get attendance success", data: result[0] }, 200);
         } catch (error) {
-            if (error instanceof Error) {
-                return c.json({ status: false, error: error.message }, 500);
-            }
-            return c.json({status: false, error: "Internal server error" }, 500);                        
+            return c.json({
+                status: false,
+                error: error instanceof Error ? error.message : "Internal server error"
+            }, 500)                         
         }
     },
 
@@ -78,26 +56,17 @@ export const attendanceController = {
                 : hours > 9 && hours <= 23 ? attendanceStatus = "LATE"
                     : attendanceStatus = "ABSENT"
 
-            const existingAttendance = await prisma.$queryRaw < { checkin: Date}[]>`
-                SELECT at."checkin"
-                FROM attendance at
-                WHERE at."employeeId" = ${user.id}::uuid 
-                AND at."date" = ${formattedDate}::date
-            `
+            const existingAttendance = await attendanceModel.existingAttendance(user.id, formattedDate)
             if (existingAttendance.length > 0) return c.json({ status: false, error: "You already checkin today" }, 400)
             
-            const attendance = await prisma.$queryRawUnsafe<{ id: string, checkin: Date }[]>(`
-                INSERT INTO attendance ("employeeId", "checkin", "date", "status")
-                VALUES ($1::uuid, NOW(), $2::date, $3::"AttendanceStatus")
-                RETURNING id, "checkin";
-            `, user.id, formattedDate, attendanceStatus)
+            const attendance = await attendanceModel.checkIn(user.id, formattedDate, attendanceStatus)
 
-            return c.json({ status: true, message: "Checkin success", data: attendance[0] }, 200)
+            return c.json({ status: true, message: "Checkin success" }, 200)
         } catch (error) {
-            if (error instanceof Error) {
-                return c.json({ status: false, error: error.message }, 500);
-            }
-            return c.json({status: false, error: "Internal server error" }, 500);             
+            return c.json({
+                status: false,
+                error: error instanceof Error ? error.message : "Internal server error"
+            }, 500)          
         }
     },
 
@@ -107,13 +76,9 @@ export const attendanceController = {
             if (!user) return c.json({ status: false, error: "Unauthorized" }, 401)
             
             const attendanceId = c.req.param("id")
-            const attendance = await prisma.$queryRaw<{ id: string, checkin: Date, checkout: Date }[]>`
-                SELECT at.id, at."checkin", at."checkout"
-                FROM attendance at
-                WHERE at.id = ${attendanceId}::uuid AND at."employeeId" = ${user.id}::uuid
-            `
+            const attendance = await attendanceModel.checkTodayAttendance(user.id, attendanceId)
 
-            if (!attendance) return c.json({ status: false, error: "Attendance not found" }, 404)
+            if (!attendance.length) return c.json({ status: false, error: "Attendance not found" }, 404)
             if (attendance[0].checkout) return c.json({ status: false, error: "You already checkout" }, 400)
             
             const now = new Date()
@@ -130,25 +95,14 @@ export const attendanceController = {
                     ? workStatus = "HALF_DAY" : workDuration >= MIN_FULL_TIME + OVERTIME_BUFFER
                         ? workStatus = "OVERTIME" : workStatus = "INSUFFICIENT"
             
-            const result = await prisma.$queryRawUnsafe<{
-                id: string,
-                checkin: Date,
-                checkout: Date,
-                workStatus: "FULL_TIME" | "HALF_DAY" | "OVERTIME" | "INSUFFICIENT",
-                workDuration: number
-            }[]>(`
-                UPDATE attendance
-                SET "checkout" = NOW(), "workStatus" = $1::"WorkStatus", "workDuration" = $2
-                WHERE id = $3::uuid
-                RETURNING id, date, checkin, checkout, "workStatus", "workDuration";
-            `, workStatus, workDuration, attendanceId) 
+            const result = await attendanceModel.checkOut(workStatus, workDuration, attendanceId)
 
-            return c.json({ status: true, message: "Checkout success", data: result[0] }, 200)
+            return c.json({ status: true, message: "Checkout success" }, 200)
         } catch (error) {
-            if (error instanceof Error) {
-                return c.json({ status: false, error: error.message }, 500);
-            }
-            return c.json({status: false, error: "Internal server error" }, 500);             
+            return c.json({
+                status: false,
+                error: error instanceof Error ? error.message : "Internal server error"
+            }, 500)               
         }
     },
 }
