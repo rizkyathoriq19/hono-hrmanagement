@@ -38,7 +38,16 @@ export const attendanceController = {
         }
     },
 
-    async getById(c: Context) { },
+    async getById(c: Context) {
+        try {
+            const user = c.get("employee")
+            if (!user) return c.json({ status: false, error: "Unauthorized" }, 401);
+
+
+        } catch (error) {
+            
+        }
+    },
 
     async checkin(c: Context) { 
         try {
@@ -88,24 +97,27 @@ export const attendanceController = {
             if (attendance[0].checkout) return c.json({ status: false, error: "You already checkout" }, 400)
             
             const now = new Date()
-            const workDuration = Math.floor((now.getTime() - new Date(attendance[0].checkin!).getTime()) / 60000)
+            let workDuration: number = Math.floor((now.getTime() - new Date(attendance[0].checkin).getTime()) / 60000)
+            workDuration = Math.max(0, workDuration)
+
             const MIN_FULL_TIME = 480
             const MIN_HALF_DAY = 240
+            const OVERTIME_BUFFER = 90
             let workStatus: "FULL_TIME" | "HALF_DAY" | "OVERTIME" | "INSUFFICIENT"
 
-            workDuration >= MIN_FULL_TIME && workDuration < MIN_FULL_TIME + 90
+            workDuration >= MIN_FULL_TIME && workDuration < MIN_FULL_TIME + OVERTIME_BUFFER
                 ? workStatus = "FULL_TIME" : workDuration >= MIN_HALF_DAY && workDuration < MIN_FULL_TIME
-                    ? workStatus = "HALF_DAY" : workDuration >= MIN_FULL_TIME + 90
+                    ? workStatus = "HALF_DAY" : workDuration >= MIN_FULL_TIME + OVERTIME_BUFFER
                         ? workStatus = "OVERTIME" : workStatus = "INSUFFICIENT"
             
-            const result = await prisma.$executeRawUnsafe<Attendance[]>(`
+            const result = await prisma.$queryRawUnsafe<Attendance[]>(`
                 UPDATE attendance
-                SET "checkout" = NOW(), "workStatus" = $1::"WorkStatus"
-                WHERE id = $2::uuid
-                RETURNING *;
-            `, workStatus, attendanceId) 
+                SET "checkout" = NOW(), "workStatus" = $1::"WorkStatus", "workDuration" = $2
+                WHERE id = $3::uuid
+                RETURNING id, "checkin", "checkout", "workStatus", "workDuration";
+            `, workStatus, workDuration, attendanceId) 
 
-            return c.json({ status: true, message: "Checkout success", data: result }, 200)
+            return c.json({ status: true, message: "Checkout success", data: result[0] }, 200)
         } catch (error) {
             if (error instanceof Error) {
                 return c.json({ status: false, error: error.message }, 500);
@@ -113,7 +125,4 @@ export const attendanceController = {
             return c.json({status: false, error: "Internal server error" }, 500);             
         }
     },
-
-    async update(c: Context) { },
-
 }

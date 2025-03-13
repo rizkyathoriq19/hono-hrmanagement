@@ -22,6 +22,5 @@ r.get("/attendance/all", authMiddleware, roleMiddleware("view_attendance"), atte
 r.get("/attendance/:id", authMiddleware, roleMiddleware("view_attendance"), attendanceController.getById) 
 r.post("/attendance/checkinout", authMiddleware, roleMiddleware("check_in_out_attendance"), attendanceController.checkin)
 r.patch("/attendance/checkinout/:id", authMiddleware, roleMiddleware("check_in_out_attendance"), attendanceController.checkout)
-r.put("/attendance/update/:id", authMiddleware, roleMiddleware("update_attendance"), attendanceController.update)
 
 export default r
