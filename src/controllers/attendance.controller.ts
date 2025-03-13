@@ -71,6 +71,12 @@ export const attendanceController = {
             const today = new Date()
             today.setHours(0, 0, 0, 0)
             const formattedDate = today.toISOString().split("T")[0]
+            const hours = new Date().getHours()
+            let attendanceStatus
+
+            hours == 8 && hours <= 9 ? attendanceStatus = "PRESENT" 
+                : hours > 9 && hours <= 23 ? attendanceStatus = "LATE"
+                    : attendanceStatus = "ABSENT"
 
             const existingAttendance = await prisma.$queryRaw < { checkin: Date}[]>`
                 SELECT at."checkin"
@@ -84,7 +90,7 @@ export const attendanceController = {
                 INSERT INTO attendance ("employeeId", "checkin", "date", "status")
                 VALUES ($1::uuid, NOW(), $2::date, $3::"AttendanceStatus")
                 RETURNING id, "checkin";
-            `, user.id, formattedDate, "PRESENT")
+            `, user.id, formattedDate, attendanceStatus)
 
             return c.json({ status: true, message: "Checkin success", data: attendance[0] }, 200)
         } catch (error) {
