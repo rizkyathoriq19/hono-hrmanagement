@@ -1,7 +1,6 @@
 import type { Context } from "hono"
-import { prisma } from "@/lib/encryption.js"
 import { z } from "zod"
-import type { Employee, UserCredentials } from "@prisma/client"
+import { employeeModel } from "@/models/employee.model"
 
 type TRegister = {
     code: string
@@ -13,14 +12,7 @@ type TRegister = {
     role: "Manager" | "Staff" | "HR"
 }
 
-type TUpdate = {
-    code: string
-    name: string
-    email: string
-    phone: string
-    department: string
-    position: string
-    role: "Manager" | "Staff" | "HR"
+type TUpdate = TRegister & {
     status: "ACTIVE" | "INACTIVE"
 }
 
@@ -42,36 +34,18 @@ const registerValidationSchema = z.object({
 
 export const employeeController = {
     async getEmployees(c: Context) { 
-        let result: Employee[] = []
         try {
             const user = c.get("employee")
-            if (!user) return c.json({ error: "Unauthorized" }, 401);
+            if (!user) return c.json({ status: false, error: "Unauthorized" }, 401);
 
-            if (user.role === "HR") {
-                result = await prisma.$queryRaw`
-                    SELECT e.id, e.name, e.email, e.phone, d.name as department, p.title as position, r.name as role, e."hireDate", e.status, e.code
-                    FROM employee e
-                    JOIN department d ON e."departmentId" = d.id
-                    JOIN position p ON e."positionId" = p.id
-                    JOIN role r ON e."roleId" = r.id
-                `
-            } else if (user.role === "Manager") { 
-                result = await prisma.$queryRaw`
-                    SELECT e.id, e.name, e.email, e.phone, d.name as department, p.title as position, r.name as role, e."hireDate", e.status, e.code
-                    FROM employee e
-                    JOIN department d ON e."departmentId" = d.id
-                    JOIN position p ON e."positionId" = p.id
-                    JOIN role r ON e."roleId" = r.id
-                    WHERE e."departmentId" = (SELECT "departmentId" FROM employee WHERE id = ${user.id}::uuid)
-                `
-            } else return c.json({ status: false, error: "Forbidden" }, 403);
+            const result = await employeeModel.getEmployees(user.role, user.id);
 
             return c.json({ status: true, message:"Get all employee data success", data: result }, 200);
         } catch (error) {
-        if (error instanceof Error) {
-            return c.json({ status: false, error: error.message }, 500);
-        }
-        return c.json({status: false, error: "Internal server error" }, 500);             
+            return c.json({
+                status: false,
+                error: error instanceof Error ? error.message : "Internal server error"
+            }, 500);          
         }
     },
 
@@ -81,88 +55,50 @@ export const employeeController = {
 
         try {
             const user = c.get("employee")
-            if (!user) return c.json({ error: "Unauthorized" }, 401)
+            if (!user) return c.json({ status: false, error: "Unauthorized" }, 401)
             
             await registerValidationSchema.parseAsync(body)
             
-            const uuidDepartment = await prisma.$queryRawUnsafe<{ id: string }[]>(`
-                SELECT id FROM "department" WHERE name = $1 LIMIT 1;
-            `, department) || []
+            const uuidDepartment: {id: string}[] = await employeeModel.getDepartmentByName(department)
+            const uuidPosition: {id: string}[]  = await employeeModel.getPositionByTitle(position)
 
-            const uuidPosition = await prisma.$queryRawUnsafe<{ id: string }[]>(`
-                SELECT id FROM "position" WHERE title = $1 LIMIT 1;
-            `, position) || []
+            if (!uuidDepartment.length) return c.json({ status: false, error: "Invalid department" }, 400);
+            if (!uuidPosition.length) return c.json({ status: false, error: "Invalid position" }, 400);
 
-            if (!uuidDepartment) return c.json({ error: "Invalid department" }, 400);
-            if (!uuidPosition) return c.json({ error: "Invalid position" }, 400);
+            const roleId = roleMap[role];
 
-            const roleId = roleMap[role] ?? 2;
-
-            const result = await prisma.$queryRawUnsafe<Employee[]>(`
-                INSERT INTO employee ("code", "name", "email", "phone", "departmentId", "positionId", "roleId", "hireDate", "status")
-                VALUES ($1, $2, $3, $4, $5::uuid, $6::uuid, $7, NOW(), 'ACTIVE') RETURNING *;
-            `, code, name, email, phone, uuidDepartment[0].id, uuidPosition[0].id, roleId)
+            const result = await employeeModel.addEmployee(
+                code, name, email, phone, uuidDepartment[0]?.id, uuidPosition[0]?.id, roleId
+            )
             
-            if (result?.length > 0) {
-                const uuidEmployee: string = result[0].id;
-                const uuidCode: string = result[0].code;
-
-                const user = await prisma.$transaction(async (sql) => {
-                    const userCreate = await sql.$queryRawUnsafe<UserCredentials[]>(`
-                        INSERT INTO "user_credentials" ("email", "password", "employeeId", "code")
-                        VALUES ($1, $2, $3::uuid, $4) RETURNING *;
-                    `, email, "1234", uuidEmployee, uuidCode);
-                
-                return userCreate[0]
-                })
-            
-            return c.json({status: true, data: result, user: user}, 201)
-            } else {
-                return c.json({error: "Failed to insert employee"}, 500)
-            }
+            if (!result) return c.json({ status: false, error: "Failed to insert employee" }, 500);
+            return c.json({ status: true, message: "Add Employee Success", data: result,}, 201);
         } catch (error) {
-            if (error instanceof z.ZodError) {
-                return c.json(
-                    { error: error.errors.map((e) => e.message).join(", ") },
-                    400
-                );
-            } else if (error instanceof Error) {
-                return c.json({ error: error.message }, 500);
-            }
-            return c.json({ error: "Internal server error" }, 500);           
+            return c.json({
+                status: false,
+                error: error instanceof z.ZodError
+                    ? error.errors.map(e => e.message).join(", ")
+                    : error instanceof Error ? error.message : "Internal server error"
+            }, 500);          
         }
     },
 
     async getEmployeeById(c: Context) { 
         try {
             const user = c.get("employee")
-            if (!user) return c.json({ error: "Unauthorized" }, 401)
+            if (!user) return c.json({ status: false, error: "Unauthorized" }, 401)
             
             const userId = c.req.param("id")
-            const result = await prisma.$queryRaw<{
-                id: string,
-                name: string,
-                code: string,
-                email: string,
-                phone: string,
-                role: string,
-            }[]>`
-                SELECT e.*
-                FROM "employee" e
-                JOIN "user_credentials" uc ON uc."employeeId" = e."id"
-                WHERE e."id" = ${userId}::uuid
-            `
-            console.log(111, result)
-            if(result.length === 0) {
-                return c.json({ error: "Employee not found" }, 404);
-            }
+            const result = await employeeModel.getEmployeeById(userId)
 
-            return c.json({status: true, message: "Get data success", data: result[0]}, 200)            
+            if (!result.length) return c.json({ status: false, error: "Employee not found" }, 404);
+
+            return c.json({status: true, message: "Get data success", data: result}, 200)            
         } catch (error) {
-            if (error instanceof Error) {
-                return c.json({ error: error.message }, 500);
-            }
-            return c.json({ error: "Internal server error" }, 500);  
+            return c.json({
+                status: false,
+                error: error instanceof Error ? error.message : "Internal server error"
+            }, 500);
         }
     },
         
@@ -170,41 +106,37 @@ export const employeeController = {
         try {
             const user = c.get("employee")
             if (!user) return c.json({ error: "Unauthorized" }, 401)
-            
-            const userId = c.req.param("id")
-
-            if (user.role === "Staff" && user.id !== userId) { 
-                return c.json({ status: false, error: "Forbidden" }, 403);
-            }
-
+                
             const body = await c.req.json<TUpdate>()
             const { code, name, email, phone, department, position, role, status } = body
-            
-            const uuidDepartment = await prisma.$queryRawUnsafe<{ id: string }[]>(`
-                SELECT id FROM "department" WHERE name = $1 LIMIT 1;
-            `, department) || []
 
-            const uuidPosition = await prisma.$queryRawUnsafe<{ id: string }[]>(`
-                SELECT id FROM "position" WHERE title = $1 LIMIT 1;
-            `, position) || []
+            const userId = c.req.param("id")
+            const getEmployeeId = await employeeModel.getEmployeeById(userId)
 
-            if (!uuidDepartment) return c.json({ error: "Invalid department" }, 400);
-            if (!uuidPosition) return c.json({ error: "Invalid position" }, 400);
+            if (!getEmployeeId.length) return c.json({ status: false, error: "Employee not Found" }, 400)
 
-            const roleId = roleMap[role] ?? 2;
+            if (user.role === "Staff" && user.id !== userId) { 
+                return c.json({ status: false, error: "Forbidden" }, 403)
+            }
 
-            const result = await prisma.$queryRawUnsafe<Employee[]>(`
-                UPDATE employee 
-                SET "code" = $1, "name" = $2, "email" = $3, "phone" = $4, "departmentId" = $5::uuid, "positionId" = $6::uuid, "roleId" = $7, status = $8::"Status"
-                WHERE id = $9::uuid
-            `, code, name, email, phone, uuidDepartment[0].id, uuidPosition[0].id, roleId, status, userId)
+            const uuidDepartment = await employeeModel.getDepartmentByName(department)
+            const uuidPosition = await employeeModel.getPositionByTitle(position)
+
+            if (!uuidDepartment.length) return c.json({ status: false, error: "Invalid department" }, 400)
+            if (!uuidPosition.length) return c.json({ status: false, error: "Invalid position" }, 400)
+
+            const roleId = roleMap[role]
+
+            const result = await employeeModel.updateEmployee(
+                userId, code, name, email, phone, uuidDepartment[0]?.id, uuidPosition[0]?.id, roleId, status
+            )
 
             return c.json({ status: true, message: "Update Employee Success" }, 200)
         } catch (error) {
-            if (error instanceof Error) {
-                return c.json({ error: error.message }, 500);
-            }
-            return c.json({ error: "Internal server error" }, 500);             
+            return c.json({
+                status: false,
+                error: error instanceof Error ? error.message : "Internal server error"
+            }, 500)
         }
     },
 
@@ -213,22 +145,23 @@ export const employeeController = {
             const user = c.get("employee")
             if (!user) return c.json({ error: "Unauthorized" }, 401)
             
-            const userId = c.req.param("id")
+            const userId = c.req.param("id") 
+            const getEmployeeId = await employeeModel.getEmployeeById(userId)
+
+            if (!getEmployeeId.length) return c.json({ status: false, error: "Employee not Found" }, 400)            
 
             if ((user.role === "Staff"  || user.role === "Manager") && user.id !== userId) { 
-                return c.json({ status: false, error: "Forbidden" }, 403);
+                return c.json({ status: false, error: "Forbidden" }, 403)
             }
             
-            const result = await prisma.$queryRawUnsafe<Employee[]>(`
-                DELETE FROM employee WHERE id = $1::uuid
-            `, userId)    
+            const result = await employeeModel.deleteEmployee(userId)
 
             return c.json({ status: true, message: "Delete Employee Success" }, 200)
         } catch (error) {
-            if (error instanceof Error) {
-                return c.json({ error: error.message }, 500);
-            }
-            return c.json({ error: "Internal server error" }, 500);             
+            return c.json({
+                status: false,
+                error: error instanceof Error ? error.message : "Internal server error"
+            }, 500)
         }
     }
 }
