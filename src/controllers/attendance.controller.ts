@@ -43,9 +43,35 @@ export const attendanceController = {
             const user = c.get("employee")
             if (!user) return c.json({ status: false, error: "Unauthorized" }, 401);
 
+            const userId = c.req.param("id")
+            if (!userId) return c.json({ status: false, error: "User not found" }, 403);
 
+            const result = await prisma.$queryRaw <{
+                id: string,
+                employee: string,
+                department: string,
+                position: string,
+                checkin: Date,
+                checkout: Date,
+                date: Date,
+                workStatus: "FULL_TIME" | "HALF_DAY" | "OVERTIME" | "INSUFFICIENT",
+                workDuration: number,
+                status: "PRESENT" | "ABSENT" | "LATE"
+            }[]>`
+                SELECT at.id, e.name as employee, d.name as department, p.title as position, at.checkin, at.checkout, at.date, at."workStatus", at."workDuration", at.status
+                FROM attendance at
+                JOIN employee e ON at."employeeId" = e.id
+                JOIN department d ON e."departmentId" = d.ID
+                JOIN position p ON e."positionId" = p.id
+                WHERE at."employeeId" = ${userId}::uuid
+            `
+
+            return c.json({ status: true, message: "Get attendance success", data: result[0] }, 200);
         } catch (error) {
-            
+            if (error instanceof Error) {
+                return c.json({ status: false, error: error.message }, 500);
+            }
+            return c.json({status: false, error: "Internal server error" }, 500);                        
         }
     },
 
