@@ -2,6 +2,7 @@ import type { Context } from "hono"
 import { z } from "zod"
 import { generateToken } from "@/utils/jwt.js"
 import { authModel } from "@/models/auth.model"
+import { res } from "@/utils/response"
 
 type TLogin = {
     identifier: string
@@ -17,7 +18,7 @@ export const authController = {
             const userByIdentifier = await authModel.userByIdentifier(identifier, password)
             
             if(userByIdentifier.length === 0) {
-                return c.json({ error: "Invalid credentials" }, 401);
+                return res(c, 'err', 404, "User not found")
             }
 
             const token = await generateToken({
@@ -25,17 +26,9 @@ export const authController = {
                 role: userByIdentifier[0].role
             })
 
-            return c.json({ user: userByIdentifier[0], token }, 200)
+            return res(c, 'login', 200, "Login successful", { token, user: userByIdentifier[0] })
         } catch (error) {
-            if (error instanceof z.ZodError) {
-                return c.json(
-                    { error: error.errors.map((e) => e.message).join(", ") },
-                    400
-                );
-            } else if (error instanceof Error) {
-                return c.json({ error: error.message }, 500);
-            }
-            return c.json({ error: "Internal server error" }, 500);                  
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
         }
     },
 }

@@ -12,16 +12,16 @@ model Employee {
   name            String
   email           String             @unique
   phone           String?
-  departmentId    String             @db.Uuid
-  positionId      String             @db.Uuid
-  roleId          Int
-  hireDate        DateTime
+  department_id   String             @db.Uuid
+  position_id     String             @db.Uuid
+  role_id         Int
+  hire_date       DateTime
   status          Status
   code            String             @unique
   attendances     Attendance[]
-  department      Department         @relation(fields: [departmentId], references: [id], onDelete: Cascade)
-  position        Position           @relation(fields: [positionId], references: [id], onDelete: Cascade)
-  role            Role               @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  department      Department         @relation(fields: [department_id], references: [id], onDelete: Cascade)
+  position        Position           @relation(fields: [position_id], references: [id], onDelete: Cascade)
+  role            Role               @relation(fields: [role_id], references: [id], onDelete: Cascade)
   trainings       EmployeeTraining[]
   leaves          Leave[]
   loans           Loan[]
@@ -36,9 +36,9 @@ model UserCredentials {
   id         String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   email      String   @unique
   password   String
-  employeeId String   @db.Uuid
+  employee_id String   @db.Uuid
   code       String   @unique
-  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employee   Employee @relation(fields: [employee_id], references: [id], onDelete: Cascade)
 
   @@map("user_credentials")
 }
@@ -55,9 +55,9 @@ model Department {
 model Position {
   id           String     @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   title        String
-  departmentId String     @db.Uuid
+  department_id String     @db.Uuid
   employees    Employee[]
-  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  department   Department @relation(fields: [department_id], references: [id], onDelete: Cascade)
 
   @@map("position")
 }
@@ -82,62 +82,66 @@ model Permission {
 
 model RolePermission {
   id           Int        @id @default(autoincrement())
-  roleId       Int
-  permissionId Int
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  role_id       Int
+  permission_id Int
+  permission   Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [role_id], references: [id], onDelete: Cascade)
 
-  @@unique([roleId, permissionId])
+  @@unique([role_id, permission_id])
   @@map("role_permission")
 }
 
 model Attendance {
   id            String          @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  employeeId    String          @db.Uuid
+  employee_id    String          @db.Uuid
   date          DateTime
-  checkin       DateTime?
-  checkout      DateTime?
-  workDuration  Int?
-  workStatus    WorkStatus?
+  check_in       DateTime?
+  check_out      DateTime?
+  check_in_lat  Decimal?      @db.Decimal(10, 7)
+  check_in_long Decimal?      @db.Decimal(10, 7)
+  check_out_lat Decimal?      @db.Decimal(10, 7)
+  check_out_long Decimal?      @db.Decimal(10, 7) 
+  work_duration  Int?
+  work_status    WorkStatus?
   status        AttendanceStatus
-  employee      Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employee      Employee        @relation(fields: [employee_id], references: [id], onDelete: Cascade)
 
   @@map("attendance")
 }
 
 model Payroll {
   id          BigInt   @id @default(autoincrement())
-  employeeId  String   @db.Uuid
-  basicSalary Decimal  @db.Decimal(10, 2)
+  employee_id  String   @db.Uuid
+  basic_salary Decimal  @db.Decimal(10, 2)
   overtime    Decimal  @db.Decimal(10, 2)
   deductions  Decimal  @db.Decimal(10, 2)
-  netSalary   Decimal  @db.Decimal(10, 2)
-  paymentDate DateTime
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  net_salary   Decimal  @db.Decimal(10, 2)
+  payment_date DateTime
+  employee    Employee @relation(fields: [employee_id], references: [id], onDelete: Cascade)
 
   @@map("payroll")
 }
 
 model Leave {
   id         BigInt      @id @default(autoincrement())
-  employeeId String      @db.Uuid
-  leaveType  String?
-  startDate  DateTime
-  endDate    DateTime
+  employee_id String      @db.Uuid
+  leave_type  String?
+  start_date  DateTime
+  end_date    DateTime
   status     LeaveStatus
-  employee   Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employee   Employee    @relation(fields: [employee_id], references: [id], onDelete: Cascade)
 
   @@map("leave")
 }
 
 model Reimbursement {
   id             BigInt              @id @default(autoincrement())
-  employeeId     String              @db.Uuid
+  employee_id     String              @db.Uuid
   amount         Decimal             @db.Decimal(10, 2)
   category       String?
-  submissionDate DateTime
+  submission_date DateTime
   status         ReimbursementStatus
-  employee       Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employee       Employee            @relation(fields: [employee_id], references: [id], onDelete: Cascade)
 
   @@map("reimbursement")
 }
@@ -155,24 +159,24 @@ model Training {
 
 model EmployeeTraining {
   id         BigInt         @id @default(autoincrement())
-  employeeId String         @db.Uuid
-  trainingId BigInt
+  employee_id String         @db.Uuid
+  training_id BigInt
   status     TrainingStatus
-  employee   Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  training   Training       @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  employee   Employee       @relation(fields: [employee_id], references: [id], onDelete: Cascade)
+  training   Training       @relation(fields: [training_id], references: [id], onDelete: Cascade)
 
-  @@unique([employeeId, trainingId])
+  @@unique([employee_id, training_id])
   @@map("employee_training")
 }
 
 model Loan {
   id          BigInt     @id @default(autoincrement())
-  employeeId  String     @db.Uuid
+  employee_id  String     @db.Uuid
   amount      Decimal    @db.Decimal(10, 2)
-  loanDate    DateTime
+  loan_date    DateTime
   installment Decimal    @db.Decimal(10, 2)
   status      LoanStatus
-  employee    Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employee    Employee   @relation(fields: [employee_id], references: [id], onDelete: Cascade)
 
   @@map("loan")
 }
@@ -198,15 +202,19 @@ enum WorkStatus {
 enum LeaveStatus {
   PENDING
   APPROVED_BY_MANAGER
+  REJECTED_BY_MANAGER
   APPROVED_BY_HR
-  REJECTED
+  REJECTED_BY_HR
+  CANCELLED
 }
 
 enum ReimbursementStatus {
   PENDING
   APPROVED_BY_MANAGER
+  REJECTED_BY_MANAGER
   APPROVED_BY_HR
-  REJECTED
+  REJECTED_BY_HR
+  CANCELLED
 }
 
 enum TrainingStatus {
