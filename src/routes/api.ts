@@ -4,6 +4,7 @@ import { employeeController } from "@/controllers/employee.controller.js"
 import { attendanceController } from "@/controllers/attendance.controller.js"
 import { authMiddleware } from "@/middlewares/auth.middleware.js"
 import { roleMiddleware } from "@/middlewares/role.middleware.js"
+import { payrollController } from "@/controllers/payroll.controller.js"
 
 const r = new Hono()
 
@@ -22,5 +23,12 @@ r.get("/attendance/all", authMiddleware, roleMiddleware("view_attendance"), atte
 r.get("/attendance/:id", authMiddleware, roleMiddleware("view_attendance"), attendanceController.getById) 
 r.post("/attendance/checkinout", authMiddleware, roleMiddleware("check_in_out_attendance"), attendanceController.checkin)
 r.patch("/attendance/checkinout/:id", authMiddleware, roleMiddleware("check_in_out_attendance"), attendanceController.checkout)
+
+// Payroll
+r.get("/payroll/all", authMiddleware, roleMiddleware("view_payroll"), payrollController.getAll)
+r.get("/payroll/:id", authMiddleware, roleMiddleware("view_payroll"), payrollController.getById)
+r.post("/payroll/add", authMiddleware, roleMiddleware("create_payroll"), payrollController.add)
+r.put("/payroll/update/:id", authMiddleware, roleMiddleware("update_payroll"), payrollController.update)
+r.delete("/payroll/delete/:id", authMiddleware, roleMiddleware("delete_payroll"), payrollController.delete)
 
 export default r

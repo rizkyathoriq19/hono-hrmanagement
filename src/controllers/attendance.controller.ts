@@ -1,5 +1,5 @@
 import type { Context } from "hono"
-import { attendanceModel } from "@/models/attendance"
+import { attendanceModel } from "@/models/attendance.model"
 
 export const attendanceController = {
     async getAll(c: Context) {
