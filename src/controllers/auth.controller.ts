@@ -1,8 +1,7 @@
-import type { Context } from "hono";
-import { z } from "zod";
-import { prisma } from "@/lib/encryption.js"
-import { generateToken } from "@/utils/jwt.js";
-import { authModel } from "@/models/auth.model";
+import type { Context } from "hono"
+import { z } from "zod"
+import { generateToken } from "@/utils/jwt.js"
+import { authModel } from "@/models/auth.model"
 
 type TLogin = {
     identifier: string

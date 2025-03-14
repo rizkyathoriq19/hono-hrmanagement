@@ -1,5 +1,4 @@
 import type { Context } from "hono"
-import { prisma } from "@/lib/encryption.js"
 import { attendanceModel } from "@/models/attendance"
 
 export const attendanceController = {
