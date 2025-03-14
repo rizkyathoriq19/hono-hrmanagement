@@ -9,12 +9,24 @@ export const payrollModel = {
         `
     },
 
-    async getPayrolls() { 
-        return await prisma.$queryRaw<Payroll[]>`
-            SELECT p.id, e.name as employee, p."basicSalary", p.overtime, p.deductions, p."netSalary", p."paymentDate"
-            FROM payroll p
-            JOIN employee e ON p."employeeId" = e.id
-        `
+    async getPayrolls(role: string, userId: string) {
+        switch (role) { 
+            case "HR":
+                return await prisma.$queryRaw<Payroll[]>`
+                    SELECT p.id, e.name as employee, p."basicSalary", p.overtime, p.deductions, p."netSalary", p."paymentDate"
+                    FROM payroll p
+                    JOIN employee e ON p."employeeId" = e.id
+                `
+            case "Manager":
+                return await prisma.$queryRaw<Payroll[]>`
+                    SELECT p.id, e.name as employee, p."basicSalary", p.overtime, p.deductions, p."netSalary", p."paymentDate"
+                    FROM payroll p
+                    JOIN employee e ON p."employeeId" = e.id
+                    WHERE e."departmentId" = (SELECT "departmentId" FROM employee WHERE id = ${userId}::uuid)
+                `
+            default:
+                return { status: false, error: "Forbidden" }
+        } 
     },
 
     async getPayrollById(payrollId: number) { 
