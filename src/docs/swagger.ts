@@ -2,6 +2,7 @@ import { OpenAPIHono } from "@hono/zod-openapi"
 import { authSwagger } from "./auth.swagger"
 import { employeeSwagger } from "./employee.swagger"
 import { attendanceSwagger } from "./attendance.swagger"
+import { payrollSwagger } from "./payroll.swagger"
 
 const swagger = new OpenAPIHono()
 
@@ -25,5 +26,8 @@ swagger.openAPIRegistry.registerPath(attendanceSwagger.getAttendancesRoute())
 swagger.openAPIRegistry.registerPath(attendanceSwagger.getAttendanceByIdRoute())
 swagger.openAPIRegistry.registerPath(attendanceSwagger.checkInRoute())
 swagger.openAPIRegistry.registerPath(attendanceSwagger.checkOutRoute())
+
+// Payroll
+swagger.openAPIRegistry.registerPath(payrollSwagger.getPayrollsRoute())
 
 export default swagger
