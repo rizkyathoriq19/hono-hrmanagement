@@ -48,10 +48,10 @@ export const attendanceModel = {
 
     async checkTodayAttendance(userId: string, attendanceId: string) { 
         return await prisma.$queryRaw<{ id: string, checkin: Date, checkout: Date }[]>`
-                SELECT at.id, at."checkin", at."checkout"
-                FROM attendance at
-                WHERE at.id = ${attendanceId}::uuid AND at."employeeId" = ${userId}::uuid
-            `
+            SELECT at.id, at."checkin", at."checkout"
+            FROM attendance at
+            WHERE at.id = ${attendanceId}::uuid AND at."employeeId" = ${userId}::uuid
+        `
     },
 
     async checkIn(userId: string, formattedDate: string, status: string) {
