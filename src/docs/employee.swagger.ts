@@ -17,13 +17,13 @@ export const employeeSwagger = {
                     content: {
                         "application/json": {
                             schema: z.object({
-                                    code: z.string().nonempty({message: "ID is required"}),
-                                    name: z.string().nonempty({message: "Name is required"}),
-                                    email: z.string().email({message: "Invalid email"}).nonempty({message: "Email is required"}),
-                                    phone: z.string().nonempty({message: "Phone is required"}),
-                                    department: z.string().nonempty({message: "Department is required"}),
-                                    position: z.string().nonempty({message: "Position is required"}),
-                                    role: z.enum(["Manager", "Staff", "HR"], {message: "Invalid role"})
+                                code: z.string().nonempty({message: "ID is required"}),
+                                name: z.string().nonempty({message: "Name is required"}),
+                                email: z.string().email({message: "Invalid email"}).nonempty({message: "Email is required"}),
+                                phone: z.string().nonempty({message: "Phone is required"}),
+                                department: z.string().nonempty({message: "Department is required"}),
+                                position: z.string().nonempty({message: "Position is required"}),
+                                role: z.enum(["Manager", "Staff", "HR"], {message: "Invalid role"})
                             })
                         }
                     }
@@ -81,7 +81,7 @@ export const employeeSwagger = {
                 in: "path",
                 required: true,
                 schema: { type: "string", format: "uuid" },
-                description: "The employee ID (must match the logged-in user's ID unless the user has special permissions)."
+                description: "Employee ID"
             }],
             responses: {
                 200: {
@@ -230,6 +230,24 @@ export const employeeSwagger = {
                 schema: { type: "string", format: "uuid" },
                 description: "The employee ID (must match the logged-in user's ID unless the user has special permissions)."
             }],    
+            request: {
+                body: {
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                code: z.string().nonempty({message: "ID is required"}),
+                                name: z.string().nonempty({message: "Name is required"}),
+                                email: z.string().email({message: "Invalid email"}).nonempty({message: "Email is required"}),
+                                phone: z.string().nonempty({message: "Phone is required"}),
+                                department: z.string().nonempty({message: "Department is required"}),
+                                position: z.string().nonempty({message: "Position is required"}),
+                                role: z.enum(["Manager", "Staff", "HR"], { message: "Invalid role" }),
+                                status: z.enum(["ACTIVE", "INACTIVE"], { message: "Invalid status" })
+                            })
+                        }
+                    }
+                }
+            },            
             responses: {
                 200: {
                     description: "Update data successful",

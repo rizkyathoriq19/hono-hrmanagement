@@ -6,9 +6,8 @@ export const attendanceController = {
         try {
             const user = c.get("employee")
             if (!user) return c.json({ status: false, error: "Unauthorized" }, 401);
-            
+
             const result = await attendanceModel.getAttendances(user.role, user.id)
-            console.log(111, result)
             if (!result) return c.json({ status: false, error: "Forbidden" }, 403);
 
             return c.json({ status: true, message: "Get attendance success",  data: result }, 200);
