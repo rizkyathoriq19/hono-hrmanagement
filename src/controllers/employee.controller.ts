@@ -34,7 +34,7 @@ interface EmployeeRaw {
     department_id: string;
     department_name: string;
     position_id: string;
-    position_title: string;
+    position_name: string;
     role_id: number;
     role_name: string;
     hire_date: Date;
@@ -63,7 +63,7 @@ const formatEmployeeData = (employee: EmployeeRaw) => ({
     },
     position: {
         id: employee.position_id,
-        title: employee.position_title,
+        name: employee.position_name,
     },
     role: {
         id: employee.role_id,
@@ -98,7 +98,7 @@ export const employeeController = {
             await registerValidationSchema.parseAsync(body)
             
             const uuidDepartment: {id: string}[] = await employeeModel.getDepartmentByName(department)
-            const uuidPosition: {id: string}[]  = await employeeModel.getPositionByTitle(position)
+            const uuidPosition: {id: string}[]  = await employeeModel.getPositionByName(position)
 
             if (!uuidDepartment.length) return res(c, 'err', 400, "Invalid department")
             if (!uuidPosition.length) return res(c, 'err', 400, "Invalid position")
@@ -152,7 +152,7 @@ export const employeeController = {
             }
 
             const uuidDepartment = await employeeModel.getDepartmentByName(department)
-            const uuidPosition = await employeeModel.getPositionByTitle(position)
+            const uuidPosition = await employeeModel.getPositionByName(position)
 
             if (!uuidDepartment.length) return res(c, 'err', 400, "Invalid department")
             if (!uuidPosition.length) return res(c, 'err', 400, "Invalid position")

@@ -54,7 +54,7 @@ model Department {
 
 model Position {
   id           String     @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  title        String
+  name        String
   department_id String     @db.Uuid
   employees    Employee[]
   department   Department @relation(fields: [department_id], references: [id], onDelete: Cascade)

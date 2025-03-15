@@ -8,7 +8,7 @@ export const employeeModel = {
                 return await prisma.$queryRaw<Employee[]>`
                     SELECT e.id, e.name, e.email, e.phone, 
                         d.id as department_id, d.name as department_name, 
-                        p.id as position_id, p.title as position_title, 
+                        p.id as position_id, p.name as position_name, 
                         r.id as role_id, r.name as role_name, 
                         e.hire_date, e.status, e.code
                     FROM employee e
@@ -20,7 +20,7 @@ export const employeeModel = {
                 return await prisma.$queryRaw<Employee[]>`
                     SELECT e.id, e.name, e.email, e.phone, 
                         d.id as department_id, d.name as department_name, 
-                        p.id as position_id, p.title as position_title, 
+                        p.id as position_id, p.name as position_name, 
                         r.id as role_id, r.name as role_name, 
                         e.hire_date, e.status, e.code
                     FROM employee e
@@ -38,7 +38,7 @@ export const employeeModel = {
         return await prisma.$queryRaw<Employee[]>`
             SELECT e.id, e.name, e.email, e.phone, 
                 d.id as department_id, d.name as department_name, 
-                p.id as position_id, p.title as position_title, 
+                p.id as position_id, p.name as position_name, 
                 r.id as role_id, r.name as role_name, 
                 e.hire_date, e.status, e.code
             FROM employee e
@@ -55,9 +55,9 @@ export const employeeModel = {
         `
     },
 
-    async getPositionByTitle(title: string) { 
+    async getPositionByName(name: string) { 
         return await prisma.$queryRaw<{ id: string }[]>`
-            SELECT id FROM position WHERE title = ${title}
+            SELECT id FROM position WHERE name = ${name}
         `
     },
 
