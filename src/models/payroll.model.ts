@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/encryption"
+import { prisma } from "@/lib/encryption"   
 import type { Payroll } from "@prisma/client"
 
 export const payrollModel = {
@@ -33,7 +33,7 @@ export const payrollModel = {
         return await prisma.$queryRaw<Payroll[]>`
             SELECT p.id, e.name as employee, p.basic_salary, p.overtime, p.deductions, p.net_salary, p.payment_date
             FROM payroll p
-            JOIN employee e ON p."employeeId" = e.id
+            JOIN employee e ON p.employee_id = e.id
             WHERE p.id = ${payrollId}
         `
     },
@@ -44,7 +44,6 @@ export const payrollModel = {
             SET basic_salary = ${basicSalary}, overtime = ${overtime}, deductions = ${deductions}, net_salary = ${netSalary}, payment_date = ${paymentDate}::date
             WHERE id = ${payrollId}
         `
-
     },
 
     async deletePayroll(payrollId: number) { 

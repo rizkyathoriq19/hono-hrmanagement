@@ -6,7 +6,11 @@ export const employeeModel = {
         switch (role) {
             case "HR":
                 return await prisma.$queryRaw<Employee[]>`
-                    SELECT e.id, e.name, e.email, e.phone, d.name as department, p.title as position, r.name as role, e.hire_date, e.status, e.code
+                    SELECT e.id, e.name, e.email, e.phone, 
+                        d.id as department_id, d.name as department_name, 
+                        p.id as position_id, p.title as position_title, 
+                        r.id as role_id, r.name as role_name, 
+                        e.hire_date, e.status, e.code
                     FROM employee e
                     JOIN department d ON e.department_id = d.id
                     JOIN position p ON e.position_id = p.id
@@ -14,7 +18,11 @@ export const employeeModel = {
                 `
             case "Manager":
                 return await prisma.$queryRaw<Employee[]>`
-                    SELECT e.id, e.name, e.email, e.phone, d.name as department, p.title as position, r.name as role, e.hire_date, e.status, e.code
+                    SELECT e.id, e.name, e.email, e.phone, 
+                        d.id as department_id, d.name as department_name, 
+                        p.id as position_id, p.title as position_title, 
+                        r.id as role_id, r.name as role_name, 
+                        e.hire_date, e.status, e.code
                     FROM employee e
                     JOIN department d ON e.department_id = d.id
                     JOIN position p ON e.position_id = p.id
@@ -28,9 +36,15 @@ export const employeeModel = {
 
     async getEmployeeById(userId: string) { 
         return await prisma.$queryRaw<Employee[]>`
-            SELECT e.*
+            SELECT e.id, e.name, e.email, e.phone, 
+                d.id as department_id, d.name as department_name, 
+                p.id as position_id, p.title as position_title, 
+                r.id as role_id, r.name as role_name, 
+                e.hire_date, e.status, e.code
             FROM employee e
-            JOIN user_credentials uc ON uc.employee_id = e.id
+            JOIN department d ON e.department_id = d.id
+            JOIN position p ON e.position_id = p.id
+            JOIN role r ON e.role_id = r.id
             WHERE e.id = ${userId}::uuid        
         `
     },
