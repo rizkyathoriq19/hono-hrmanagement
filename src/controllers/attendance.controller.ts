@@ -1,48 +1,43 @@
 import type { Context } from "hono"
 import { attendanceModel } from "@/models/attendance.model"
+import { res } from "@/utils/response"
 
 export const attendanceController = {
     async getAll(c: Context) {
         try {
             const user = c.get("employee")
-            if (!user) return c.json({ status: false, error: "Unauthorized" }, 401);
+            if (!user) return res(c, 'err', 401, "Unauthorized") 
 
             const result = await attendanceModel.getAttendances(user.role, user.id)
-            if (!result) return c.json({ status: false, error: "Forbidden" }, 403);
+            if (!result) return res(c, 'err', 403, "Forbidden") 
 
-            return c.json({ status: true, message: "Get attendance success",  data: result }, 200);
+            return res(c, 'get', 200, "Get all attendance success", result) 
         } catch (error) {
-            return c.json({
-                status: false,
-                error: error instanceof Error ? error.message : "Internal server error"
-            }, 500)        
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")  
         }
     },
 
     async getById(c: Context) {
         try {
             const user = c.get("employee")
-            if (!user) return c.json({ status: false, error: "Unauthorized" }, 401);
+            if (!user) return res(c, 'err', 401, "Unauthorized") 
 
             const userId = c.req.param("id")
-            if (!userId) return c.json({ status: false, error: "User not found" }, 403);
+            if (!userId) return res(c, 'err', 404, "Employee not found") 
 
             const result = await attendanceModel.getAttendanceById(userId)
-            if (!result.length) return c.json({ status: false, error: "Forbidden" }, 403);
+            if (!result.length) return res(c, 'err', 403, "Forbidden") 
 
-            return c.json({ status: true, message: "Get attendance success", data: result[0] }, 200);
+            return res(c, 'getDetail', 200, "Get attendance success", result[0]) 
         } catch (error) {
-            return c.json({
-                status: false,
-                error: error instanceof Error ? error.message : "Internal server error"
-            }, 500)                         
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")  
         }
     },
 
     async checkin(c: Context) { 
         try {
             const user = c.get("employee")
-            if (!user) return c.json({ status: false, error: "Unauthorized" }, 401);
+            if (!user) return res(c, 'err', 401, "Unauthorized") 
 
             const today = new Date()
             today.setHours(0, 0, 0, 0)
@@ -55,29 +50,26 @@ export const attendanceController = {
                     : attendanceStatus = "ABSENT"
 
             const existingAttendance = await attendanceModel.existingAttendance(user.id, formattedDate)
-            if (existingAttendance.length > 0) return c.json({ status: false, error: "You already checkin today" }, 400)
+            if (existingAttendance.length > 0)return res(c, 'err', 400, "You already checkin today") 
             
             const attendance = await attendanceModel.checkIn(user.id, formattedDate, attendanceStatus)
 
-            return c.json({ status: true, message: "Checkin success" }, 200)
+            return res(c, 'post', 200, "Checkin success") 
         } catch (error) {
-            return c.json({
-                status: false,
-                error: error instanceof Error ? error.message : "Internal server error"
-            }, 500)          
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")  
         }
     },
 
     async checkout(c: Context) { 
         try {
             const user = c.get("employee")
-            if (!user) return c.json({ status: false, error: "Unauthorized" }, 401)
+            if (!user) return res(c, 'err', 401, "Unauthorized") 
             
             const attendanceId = c.req.param("id")
             const attendance = await attendanceModel.checkTodayAttendance(user.id, attendanceId)
 
-            if (!attendance.length) return c.json({ status: false, error: "Attendance not found" }, 404)
-            if (attendance[0].checkout) return c.json({ status: false, error: "You already checkout" }, 400)
+            if (!attendance.length) return res(c, 'err', 404, "Attendance not found") 
+            if (attendance[0].checkout) return res(c, 'err', 400, "You already checkout today") 
             
             const now = new Date()
             let workDuration: number = Math.floor((now.getTime() - new Date(attendance[0].checkin).getTime()) / 60000)
@@ -95,12 +87,9 @@ export const attendanceController = {
             
             const result = await attendanceModel.checkOut(workStatus, workDuration, attendanceId)
 
-            return c.json({ status: true, message: "Checkout success" }, 200)
+            return res(c, 'patch', 200, "Checkout success") 
         } catch (error) {
-            return c.json({
-                status: false,
-                error: error instanceof Error ? error.message : "Internal server error"
-            }, 500)               
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")  
         }
     },
 }

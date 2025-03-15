@@ -4,7 +4,7 @@ import type { Payroll } from "@prisma/client"
 export const payrollModel = {
     async addPayroll(userId: string, basicSalary: number, overtime: number, deductions: number, netSalary: number, paymentDate: string) { 
         return await prisma.$executeRaw`
-            INSERT INTO payroll (employeeId, "basicSalary", overtime, deductions, "netSalary", "paymentDate")
+            INSERT INTO payroll (employee_id, basic_salary, overtime, deductions, net_salary, payment_date)
             VALUES (${userId}::uuid, ${basicSalary}, ${overtime}, ${deductions}, ${netSalary}, ${paymentDate}::date)
         `
     },
@@ -13,16 +13,16 @@ export const payrollModel = {
         switch (role) { 
             case "HR":
                 return await prisma.$queryRaw<Payroll[]>`
-                    SELECT p.id, e.name as employee, p."basicSalary", p.overtime, p.deductions, p."netSalary", p."paymentDate"
+                    SELECT p.id, e.name as employee, p.basic_salary, p.overtime, p.deductions, p.net_salary, p.payment_date
                     FROM payroll p
-                    JOIN employee e ON p."employeeId" = e.id
+                    JOIN employee e ON p.employee_id = e.id
                 `
             case "Manager":
                 return await prisma.$queryRaw<Payroll[]>`
-                    SELECT p.id, e.name as employee, p."basicSalary", p.overtime, p.deductions, p."netSalary", p."paymentDate"
+                    SELECT p.id, e.name as employee, p.basic_salary, p.overtime, p.deductions, p.net_salary, p.payment_date
                     FROM payroll p
-                    JOIN employee e ON p."employeeId" = e.id
-                    WHERE e."departmentId" = (SELECT "departmentId" FROM employee WHERE id = ${userId}::uuid)
+                    JOIN employee e ON p.employee_id = e.id
+                    WHERE e.department_id = (SELECT department_id FROM employee WHERE id = ${userId}::uuid)
                 `
             default:
                 return { status: false, error: "Forbidden" }
@@ -31,7 +31,7 @@ export const payrollModel = {
 
     async getPayrollById(payrollId: number) { 
         return await prisma.$queryRaw<Payroll[]>`
-            SELECT p.id, e.name as employee, p."basicSalary", p.overtime, p.deductions, p."netSalary", p."paymentDate"
+            SELECT p.id, e.name as employee, p.basic_salary, p.overtime, p.deductions, p.net_salary, p.payment_date
             FROM payroll p
             JOIN employee e ON p."employeeId" = e.id
             WHERE p.id = ${payrollId}
@@ -41,7 +41,7 @@ export const payrollModel = {
     async updatePayroll(payrollId: number, basicSalary: number, overtime: number, deductions: number, netSalary: number, paymentDate: string) { 
         return await prisma.$executeRaw`
             UPDATE payroll
-            SET "basicSalary" = ${basicSalary}, overtime = ${overtime}, deductions = ${deductions}, "netSalary" = ${netSalary}, "paymentDate" = ${paymentDate}::date
+            SET basic_salary = ${basicSalary}, overtime = ${overtime}, deductions = ${deductions}, net_salary = ${netSalary}, payment_date = ${paymentDate}::date
             WHERE id = ${payrollId}
         `
 

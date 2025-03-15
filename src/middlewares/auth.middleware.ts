@@ -15,10 +15,10 @@ export const authMiddleware: MiddlewareHandler<{ Variables: { employee: IUserTok
         id: string
         name: string
     }[]>`
-        SELECT r."id", r."name"
-        FROM "role" r
-        JOIN "employee" e ON r."id" = e."roleId"
-        WHERE e."id" = ${user.id}::uuid
+        SELECT r.id, r.name
+        FROM role r
+        JOIN employee e ON r.id = e.role_id
+        WHERE e.id = ${user.id}::uuid
     `
 
     if (!role.length) return c.json({ status: false, error: "User not found" }, 401)
@@ -26,10 +26,10 @@ export const authMiddleware: MiddlewareHandler<{ Variables: { employee: IUserTok
     const permission = await prisma.$queryRaw <{
         name: string
     }[]>`
-        SELECT p."name"
-        FROM "permission" p
-        JOIN "role_permission" rp ON p."id" = rp."permissionId"
-        WHERE rp."roleId" = ${role[0].id}
+        SELECT p.name
+        FROM permission p
+        JOIN role_permission rp ON p.id = rp.permission_id
+        WHERE rp.role_id = ${role[0].id}
     `
 
     const checkPermission = permission.map(p => p.name)

@@ -1,6 +1,7 @@
 import type { Context } from "hono"
 import { z } from "zod"
 import { employeeModel } from "@/models/employee.model"
+import { res } from "@/utils/response"
 
 type TRegister = {
     code: string
@@ -36,16 +37,13 @@ export const employeeController = {
     async getEmployees(c: Context) { 
         try {
             const user = c.get("employee")
-            if (!user) return c.json({ status: false, error: "Unauthorized" }, 401);
+            if (!user) return res(c, 'err', 401, "Unauthorized")
 
             const result = await employeeModel.getEmployees(user.role, user.id);
 
-            return c.json({ status: true, message:"Get all employee data success", data: result }, 200);
+            return res(c, 'get', 200, "Get all employee success", result)
         } catch (error) {
-            return c.json({
-                status: false,
-                error: error instanceof Error ? error.message : "Internal server error"
-            }, 500);          
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")       
         }
     },
 
@@ -55,15 +53,15 @@ export const employeeController = {
 
         try {
             const user = c.get("employee")
-            if (!user) return c.json({ status: false, error: "Unauthorized" }, 401)
+            if (!user) return res(c, 'err', 401, "Unauthorized")
             
             await registerValidationSchema.parseAsync(body)
             
             const uuidDepartment: {id: string}[] = await employeeModel.getDepartmentByName(department)
             const uuidPosition: {id: string}[]  = await employeeModel.getPositionByTitle(position)
 
-            if (!uuidDepartment.length) return c.json({ status: false, error: "Invalid department" }, 400);
-            if (!uuidPosition.length) return c.json({ status: false, error: "Invalid position" }, 400);
+            if (!uuidDepartment.length) return res(c, 'err', 400, "Invalid department")
+            if (!uuidPosition.length) return res(c, 'err', 400, "Invalid position")
 
             const roleId = roleMap[role];
 
@@ -71,41 +69,35 @@ export const employeeController = {
                 code, name, email, phone, uuidDepartment[0]?.id, uuidPosition[0]?.id, roleId
             )
             
-            if (!result) return c.json({ status: false, error: "Failed to insert employee" }, 500);
-            return c.json({ status: true, message: "Add Employee Success", data: result,}, 201);
+            if (!result) return res(c, 'err', 500, "Failed to add employee")
+            return res(c, 'post', 201, "Add employee success")
         } catch (error) {
-            return c.json({
-                status: false,
-                error: error instanceof z.ZodError
-                    ? error.errors.map(e => e.message).join(", ")
-                    : error instanceof Error ? error.message : "Internal server error"
-            }, 500);          
+            return res(c, 'err', 500, error instanceof z.ZodError 
+                ? error.errors.map(e => e.message).join(", ") : error instanceof Error
+                    ? error.message : "Internal server error")     
         }
     },
 
     async getEmployeeById(c: Context) { 
         try {
             const user = c.get("employee")
-            if (!user) return c.json({ status: false, error: "Unauthorized" }, 401)
+            if (!user) return res(c, 'err', 401, "Unauthorized")
             
             const userId = c.req.param("id")
             const result = await employeeModel.getEmployeeById(userId)
 
-            if (!result.length) return c.json({ status: false, error: "Employee not found" }, 404);
+            if (!result.length) return res(c, 'err', 404, "Employee not found")
 
-            return c.json({status: true, message: "Get data success", data: result}, 200)            
+            return res(c, 'getDetail', 200, "Get employee success", result[0])           
         } catch (error) {
-            return c.json({
-                status: false,
-                error: error instanceof Error ? error.message : "Internal server error"
-            }, 500);
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")  
         }
     },
         
     async updateEmployee(c: Context) {
         try {
             const user = c.get("employee")
-            if (!user) return c.json({ error: "Unauthorized" }, 401)
+            if (!user) return res(c, 'err', 401, "Unauthorized")
                 
             const body = await c.req.json<TUpdate>()
             const { code, name, email, phone, department, position, role, status } = body
@@ -113,17 +105,17 @@ export const employeeController = {
             const userId = c.req.param("id")
             const getEmployeeId = await employeeModel.getEmployeeById(userId)
 
-            if (!getEmployeeId.length) return c.json({ status: false, error: "Employee not Found" }, 400)
+            if (!getEmployeeId.length) return res(c, 'err', 404, "Employee not found")
 
             if (user.role === "Staff" && user.id !== userId) { 
-                return c.json({ status: false, error: "Forbidden" }, 403)
+                return res(c, 'err', 403, "Forbidden")
             }
 
             const uuidDepartment = await employeeModel.getDepartmentByName(department)
             const uuidPosition = await employeeModel.getPositionByTitle(position)
 
-            if (!uuidDepartment.length) return c.json({ status: false, error: "Invalid department" }, 400)
-            if (!uuidPosition.length) return c.json({ status: false, error: "Invalid position" }, 400)
+            if (!uuidDepartment.length) return res(c, 'err', 400, "Invalid department")
+            if (!uuidPosition.length) return res(c, 'err', 400, "Invalid position")
 
             const roleId = roleMap[role]
 
@@ -131,37 +123,31 @@ export const employeeController = {
                 userId, code, name, email, phone, uuidDepartment[0]?.id, uuidPosition[0]?.id, roleId, status
             )
 
-            return c.json({ status: true, message: "Update Employee Success" }, 200)
+            return res(c, 'put', 200, "Update employee success")
         } catch (error) {
-            return c.json({
-                status: false,
-                error: error instanceof Error ? error.message : "Internal server error"
-            }, 500)
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")  
         }
     },
 
     async deleteEmployee(c: Context) {
         try {
             const user = c.get("employee")
-            if (!user) return c.json({ error: "Unauthorized" }, 401)
+            if (!user) return res(c, 'err', 401, "Unauthorized")
             
             const userId = c.req.param("id") 
             const getEmployeeId = await employeeModel.getEmployeeById(userId)
 
-            if (!getEmployeeId.length) return c.json({ status: false, error: "Employee not Found" }, 400)            
+            if (!getEmployeeId.length) return res(c, 'err', 404, "Employee not found")           
 
             if ((user.role === "Staff"  || user.role === "Manager") && user.id !== userId) { 
-                return c.json({ status: false, error: "Forbidden" }, 403)
+                return res(c, 'err', 403, "Forbidden")
             }
             
             const result = await employeeModel.deleteEmployee(userId)
 
-            return c.json({ status: true, message: "Delete Employee Success" }, 200)
+            return res(c, 'delete', 200, "Delete employee success")
         } catch (error) {
-            return c.json({
-                status: false,
-                error: error instanceof Error ? error.message : "Internal server error"
-            }, 500)
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error") 
         }
     }
 }

@@ -79,7 +79,7 @@ export const attendanceSwagger = {
                 in: 'path',
                 required: true,
                 schema: { type: 'string', format: 'uuid' },
-                description: 'Attendance ID'
+                description: 'Employee ID'
             }],
             responses: {
                 200: {

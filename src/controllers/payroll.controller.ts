@@ -1,6 +1,7 @@
 import { Context } from "hono"
 import { z } from "zod"
 import { payrollModel } from "@/models/payroll.model"
+import { res } from "@/utils/response"
 
 type TAddPayroll = {
     employee: string,
@@ -17,16 +18,13 @@ export const payrollController = {
     async getAll(c: Context) { 
         try {
             const user = c.get("employee")
-            if (!user) return c.json({ status: false, error: "Unauthorized" }, 401);
+            if (!user) return res(c, 'err', 401, "Unauthorized") 
 
             const result = await payrollModel.getPayrolls(user.role, user.id)
 
-            return c.json({ status: true, message: "Get payroll success", data: result }, 200);
+            return res(c, 'err', 200, "Get all payroll success", result) 
         } catch (error) {
-            return c.json({
-                status: false,
-                error: error instanceof Error ? error.message : "Internal server error"
-            }, 500)            
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")  
         }
 
     },
