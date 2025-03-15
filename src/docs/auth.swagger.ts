@@ -27,21 +27,29 @@ export const authSwagger = {
                     content: {
                         "application/json": {
                             schema: z.object({
-                                user:
-                                    z.object({
+                                status: z.boolean(),
+                                code: z.number().default(200),
+                                message: z.string(),
+                                data: z.object({
+                                    token: z.string(),
+                                    user: z.object({
                                         id: z.string().uuid(),
                                         roleId: z.number(),
                                     }),
-                                token: z.string()
+                                })
                             }),
                         }
                     }
                 },
-                401: {
-                    description: "Invalid credentials",
+                404: {
+                    description: "Not found",
                     content: {
                         "application/json": {
-                            schema: z.object({ error: z.string() })
+                            schema: z.object({
+                                status: z.boolean().default(false),
+                                code: z.number().default(404),
+                                message: z.string()
+                            })
                         }
                     }
                 },
@@ -49,7 +57,11 @@ export const authSwagger = {
                     description: "Internal server error",
                     content: {
                         "application/json": {
-                            schema: z.object({ error: z.string() })
+                            schema: z.object({
+                                status: z.boolean().default(false),
+                                code: z.number().default(500),
+                                message: z.string()
+                            })
                         }
                     }
                 }

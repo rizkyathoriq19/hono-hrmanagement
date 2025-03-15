@@ -14,16 +14,24 @@ export const payrollSwagger = {
                         "application/json": {
                             schema: z.object({
                                 status: z.boolean(),
+                                code: z.number().default(200),
+                                meta: z.object({
+                                    current_page: z.number(),
+                                    total_pages: z.number(),
+                                    total_row: z.number()
+                                }),
                                 message: z.string(),
-                                data: z.object({
-                                    id: z.string(),
-                                    employee: z.string(),
-                                    basicSalary: z.number(),
-                                    overtime: z.number(),
-                                    deductions: z.number(),
-                                    netSalary: z.number(),
-                                    paymentDate: z.date(),
-                                })
+                                data: z.array(
+                                    z.object({
+                                        id: z.string(),
+                                        employee: z.string(),
+                                        basicSalary: z.number(),
+                                        overtime: z.number(),
+                                        deductions: z.number(),
+                                        netSalary: z.number(),
+                                        paymentDate: z.date(),
+                                    })
+                                )
                             })
                         }
                     }
@@ -34,18 +42,8 @@ export const payrollSwagger = {
                         "application/json": {
                             schema: z.object({
                                 status: z.boolean().default(false),
-                                message: z.string(),
-                            })
-                        }
-                    }
-                },
-                403: {
-                    description: 'Forbidden',
-                    content: {
-                        "application/json": {
-                            schema: z.object({
-                                status: z.boolean().default(false),
-                                message: z.string(),
+                                code: z.number().default(401),
+                                message: z.string()
                             })
                         }
                     }
@@ -56,7 +54,8 @@ export const payrollSwagger = {
                         "application/json": {
                             schema: z.object({
                                 status: z.boolean().default(false),
-                                error: z.string(),
+                                code: z.number().default(500),
+                                message: z.string()
                             })
                         }
                     }
