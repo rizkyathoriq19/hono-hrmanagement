@@ -173,7 +173,8 @@ export const employeeController = {
 
             const result = await employeeModel.inactiveEmployee(userId, status)
 
-            return res(c, 'patch', 200, "Inactive employee success")
+            const message = status == 'ACTIVE' ? "Active employee success" : "Inactive employee success"
+            return res(c, 'patch', 200, message)
         } catch (error) {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error") 
         }

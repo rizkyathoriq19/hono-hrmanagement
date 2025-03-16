@@ -3,6 +3,7 @@ import type { Employee } from "@prisma/client"
 
 export const employeeModel = {
     async getEmployees(role: string, userId: string, c_page: number, p_limit: number, search: string = '') {
+        const searchQuery = `%${search}%`
         switch (role) {
             case "HR":
                 return await prisma.$queryRaw<Employee[]>`
@@ -15,9 +16,9 @@ export const employeeModel = {
                     JOIN department d ON e.department_id = d.id
                     JOIN position p ON e.position_id = p.id
                     JOIN role r ON e.role_id = r.id
-                    WHERE e.name ILIKE ${'%' + search + '%'}
-                    OR e.code ILIKE ${'%' + search + '%'}
-                    ORDER BY e.hire_date DESC
+                    WHERE e.name ILIKE ${searchQuery}
+                    OR e.code ILIKE ${searchQuery}
+                    ORDER BY e.hire_date ASC
                     LIMIT ${p_limit} OFFSET ${(c_page - 1) * p_limit}
                 `
             case "Manager":
@@ -31,9 +32,9 @@ export const employeeModel = {
                     JOIN department d ON e.department_id = d.id
                     JOIN position p ON e.position_id = p.id
                     JOIN role r ON e.role_id = r.id
-                    WHERE e.name ILIKE ${'%' + search + '%'}
-                    OR e.code ILIKE ${'%' + search + '%'}
-                    ORDER BY e.hire_date DESC
+                    WHERE e.name ILIKE ${searchQuery}
+                    OR e.code ILIKE ${searchQuery}
+                    ORDER BY e.hire_date ASC
                     LIMIT ${p_limit} OFFSET ${(c_page - 1) * p_limit}                    
                     WHERE e.department_id = (SELECT department_id FROM employee WHERE id = ${userId}::uuid)                
                 `
