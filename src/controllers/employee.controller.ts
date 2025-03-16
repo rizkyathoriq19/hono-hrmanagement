@@ -1,45 +1,8 @@
 import type { Context } from "hono"
-import { array, z } from "zod"
+import { z } from "zod"
 import { employeeModel } from "@/models/employee.model"
 import { res } from "@/utils/response"
-
-type TRole = "Manager" | "Staff" | "HR"
-
-type TRegister = {
-    code: string
-    name: string
-    email: string
-    phone: string
-    department: string
-    position: string
-    role: "Manager" | "Staff" | "HR"
-}
-
-type TUpdate = TRegister & {
-    status: "ACTIVE" | "INACTIVE"
-}
-
-const roleMap: Record<TRole, number> = {
-    Manager: 1,
-    Staff: 2,
-    HR: 3
-};
-
-interface EmployeeRaw {
-    id: string;
-    code: string;
-    name: string;
-    email: string;
-    phone: string;
-    department_id: string;
-    department_name: string;
-    position_id: string;
-    position_name: string;
-    role_id: number;
-    role_name: string;
-    hire_date: Date;
-    status: string;
-}
+import { IEmployee, roleMap, TRegister, TUpdate } from "@/types/employee.type"
 
 const registerValidationSchema = z.object({
     code: z.string().nonempty({message: "ID is required"}),
@@ -51,7 +14,7 @@ const registerValidationSchema = z.object({
     role: z.enum(["Manager", "Staff", "HR"], {message: "Invalid role"})
 })
 
-const formatEmployeeData = (employee: EmployeeRaw) => ({
+const formatEmployeeData = (employee: IEmployee) => ({
     id: employee.id,
     code: employee.code,
     name: employee.name,
@@ -79,7 +42,7 @@ export const employeeController = {
             const user = c.get("employee")
             if (!user) return res(c, 'err', 401, "Unauthorized")
 
-            const result = await employeeModel.getEmployees(user.role, user.id) as EmployeeRaw[]
+            const result = await employeeModel.getEmployees(user.role, user.id) as IEmployee[]
 
             return res(c, 'get', 200, "Get all employee success", result.map(formatEmployeeData))
         } catch (error) {
@@ -126,7 +89,7 @@ export const employeeController = {
             const userId = c.req.param("id")
             if (!userId.length) return res(c, 'err', 404, "Employee not found")
 
-            const result= await employeeModel.getEmployeeById(userId) as EmployeeRaw[]
+            const result= await employeeModel.getEmployeeById(userId) as IEmployee[]
 
             return res(c, 'getDetail', 200, "Get employee success", result.map(formatEmployeeData)[0])           
         } catch (error) {

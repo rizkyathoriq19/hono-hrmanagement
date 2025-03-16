@@ -34,7 +34,11 @@ export const authSwagger = {
                                     token: z.string(),
                                     user: z.object({
                                         id: z.string().uuid(),
-                                        roleId: z.number(),
+                                        name: z.string(),
+                                        role: z.object({
+                                            id: z.number(),
+                                            name: z.string()
+                                        }),
                                     }),
                                 })
                             }),

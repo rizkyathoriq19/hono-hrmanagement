@@ -9,5 +9,14 @@ export const authModel = {
             WHERE (uc.code = ${identifier} OR uc.email = ${identifier})
             AND uc.password = crypt(${password}, uc.password)
         `
+    },
+    
+    async getLoginData(identifier: string) {
+        return await prisma.$queryRaw`
+            SELECT e.id, e.name, r.id as role_id, r.name as role_name
+            FROM employee e
+            JOIN role r ON e.role_id = r.id
+            WHERE e.id = (SELECT employee_id FROM user_credentials WHERE code = ${identifier} OR email = ${identifier})
+        `
     }
 }
