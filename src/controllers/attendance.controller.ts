@@ -1,6 +1,33 @@
 import type { Context } from "hono"
 import { attendanceModel } from "@/models/attendance.model"
 import { res } from "@/utils/response"
+import { IAttendance } from "@/types/attendance.type"
+
+const formatAttendanceData = (attendance: IAttendance) => ({
+    id: attendance.id,
+    employee: {
+        id: attendance.employee_id,
+        name: attendance.employee_name,
+    },
+    department: {
+        id: attendance.department_id,
+        name: attendance.department_name,
+    },
+    position: {
+        id: attendance.position_id,
+        name: attendance.position_name,
+    },
+    checkin: attendance.check_in,
+    checkout: attendance.check_out,
+    date: attendance.date,
+    checkinLat: attendance.check_in_lat,
+    checkinLong: attendance.check_in_long,
+    checkoutLat: attendance.check_out_lat,
+    checkoutLong: attendance.check_out_long,
+    workStatus: attendance.work_status,
+    workDuration: attendance.work_duration,
+    status: attendance.status,
+})
 
 export const attendanceController = {
     async getAll(c: Context) {
@@ -8,10 +35,9 @@ export const attendanceController = {
             const user = c.get("employee")
             if (!user) return res(c, 'err', 401, "Unauthorized") 
 
-            const result = await attendanceModel.getAttendances(user.role, user.id)
-            if (!result) return res(c, 'err', 403, "Forbidden") 
+            const result = await attendanceModel.getAttendances(user.role, user.id) as IAttendance[]
 
-            return res(c, 'get', 200, "Get all attendance success", result) 
+            return res(c, 'get', 200, "Get all attendance success", result.map(formatAttendanceData)) 
         } catch (error) {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")  
         }
@@ -25,10 +51,9 @@ export const attendanceController = {
             const userId = c.req.param("id")
             if (!userId) return res(c, 'err', 404, "Employee not found") 
 
-            const result = await attendanceModel.getAttendanceById(userId)
-            if (!result.length) return res(c, 'err', 403, "Forbidden") 
+            const result = await attendanceModel.getAttendanceById(userId) as IAttendance[]
 
-            return res(c, 'getDetail', 200, "Get attendance success", result[0]) 
+            return res(c, 'getDetail', 200, "Get attendance success", result.map(formatAttendanceData)[0]) 
         } catch (error) {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")  
         }
@@ -69,10 +94,10 @@ export const attendanceController = {
             const attendance = await attendanceModel.checkTodayAttendance(user.id, attendanceId)
 
             if (!attendance.length) return res(c, 'err', 404, "Attendance not found") 
-            if (attendance[0].checkout) return res(c, 'err', 400, "You already checkout today") 
-            
+            if (attendance[0].check_out) return res(c, 'err', 400, "You already checkout today") 
+
             const now = new Date()
-            let workDuration: number = Math.floor((now.getTime() - new Date(attendance[0].checkin).getTime()) / 60000)
+            let workDuration: number = Math.floor((now.getTime() - new Date(attendance[0].check_in).getTime()) / 60000)
             workDuration = Math.max(0, workDuration)
 
             const MIN_FULL_TIME = 480

@@ -6,7 +6,7 @@ export const attendanceModel = {
         switch (role) { 
             case "HR":
                 return await prisma.$queryRaw<Attendance[]>`
-                    SELECT at.id, e.name as employee, d.name as department, p.name as position, at.check_in, at.check_out, at.date, at.work_status, at.work_duration, at.status
+                    SELECT at.id, e.id as employee_id, e.name as employee_name, d.id as department_id, d.name as department_name, p.id as position_id, p.name as position_name, at.check_in, at.check_out, at.date, at.work_status, at.work_duration, at.status
                     FROM attendance at
                     JOIN employee e ON at.employee_id = e.id
                     JOIN department d ON e.department_id = d.id
@@ -14,7 +14,7 @@ export const attendanceModel = {
                 `
             case "Manager":
                 return await prisma.$queryRaw<Attendance[]>`
-                    SELECT at.id, e.name as employee, d.name as department, p.name as position, at.check_in, at.check_out, at.date, at.work_status, at.work_duration, at.status
+                    SELECT at.id, e.id as employee_id, e.name as employee_name, d.id as department_id, d.name as department_name, p.id as position_id, p.name as position_name, at.check_in, at.check_out, at.date, at.work_status, at.work_duration, at.status
                     FROM attendance at
                     JOIN employee e ON at.employee_id = e.id
                     JOIN department d ON e.department_id = d.id
@@ -28,7 +28,7 @@ export const attendanceModel = {
 
     async getAttendanceById(userId: string) {
         return await prisma.$queryRaw<Attendance[]>`
-            SELECT at.id, e.name as employee, d.name as department, p.name as position, at.check_in, at.check_out, at.date, at.work_status, at.work_duration, at.status
+            SELECT at.id, e.id as employee_id, e.name as employee_name, d.id as department_id, d.name as department_name, p.id as position_id, p.name as position_name, at.check_in, at.check_out, at.date, at.work_status, at.work_duration, at.status
             FROM attendance at
             JOIN employee e ON at.employee_id = e.id
             JOIN department d ON e.department_id = d.ID
@@ -38,7 +38,7 @@ export const attendanceModel = {
     },
 
     async existingAttendance(userId: string, formattedDate: string) {
-        return await prisma.$queryRaw<{ checkin: Date }[]>`
+        return await prisma.$queryRaw<{ check_in: Date }[]>`
             SELECT at.check_in
             FROM attendance at
             WHERE at.employee_id = ${userId}::uuid
@@ -47,7 +47,7 @@ export const attendanceModel = {
     },
 
     async checkTodayAttendance(userId: string, attendanceId: string) { 
-        return await prisma.$queryRaw<{ id: string, checkin: Date, checkout: Date }[]>`
+        return await prisma.$queryRaw<{ id: string, check_in: Date, check_out: Date }[]>`
             SELECT at.id, at.check_in, at.check_out
             FROM attendance at
             WHERE at.id = ${attendanceId}::uuid AND at.employee_id = ${userId}::uuid
