@@ -13,12 +13,16 @@ swagger.openAPIRegistry.registerComponent('securitySchemes', 'Bearer', {
 
 // Auth
 swagger.openAPIRegistry.registerPath(authSwagger.loginRoute())
+swagger.openAPIRegistry.registerPath(authSwagger.getDepartmentRoute())
+swagger.openAPIRegistry.registerPath(authSwagger.getPositionRoute())
+swagger.openAPIRegistry.registerPath(authSwagger.getRoleRoute())
 
 // Employee
 swagger.openAPIRegistry.registerPath(employeeSwagger.getEmployeesRoute())
 swagger.openAPIRegistry.registerPath(employeeSwagger.getEmployeeByIdRoute())
 swagger.openAPIRegistry.registerPath(employeeSwagger.addEmployeeRoute())
 swagger.openAPIRegistry.registerPath(employeeSwagger.updateEmployeeRoute())
+swagger.openAPIRegistry.registerPath(employeeSwagger.statusEmployeeRoute())
 swagger.openAPIRegistry.registerPath(employeeSwagger.deleteEmployeeRoute())
 
 // Attendance

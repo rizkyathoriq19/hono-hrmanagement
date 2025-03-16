@@ -2,7 +2,7 @@ import { prisma } from "@/lib/encryption"
 import type { Employee } from "@prisma/client"
 
 export const employeeModel = {
-    async getEmployees(role: string, userId: string) { 
+    async getEmployees(role: string, userId: string, c_page: number, p_limit: number, search: string = '') {
         switch (role) {
             case "HR":
                 return await prisma.$queryRaw<Employee[]>`
@@ -15,6 +15,10 @@ export const employeeModel = {
                     JOIN department d ON e.department_id = d.id
                     JOIN position p ON e.position_id = p.id
                     JOIN role r ON e.role_id = r.id
+                    WHERE e.name ILIKE ${'%' + search + '%'}
+                    OR e.code ILIKE ${'%' + search + '%'}
+                    ORDER BY e.hire_date DESC
+                    LIMIT ${p_limit} OFFSET ${(c_page - 1) * p_limit}
                 `
             case "Manager":
                 return await prisma.$queryRaw<Employee[]>`
@@ -27,14 +31,18 @@ export const employeeModel = {
                     JOIN department d ON e.department_id = d.id
                     JOIN position p ON e.position_id = p.id
                     JOIN role r ON e.role_id = r.id
+                    WHERE e.name ILIKE ${'%' + search + '%'}
+                    OR e.code ILIKE ${'%' + search + '%'}
+                    ORDER BY e.hire_date DESC
+                    LIMIT ${p_limit} OFFSET ${(c_page - 1) * p_limit}                    
                     WHERE e.department_id = (SELECT department_id FROM employee WHERE id = ${userId}::uuid)                
                 `
             default:
-                return { status: false, error: "Forbidden"}
+                return { status: false, error: "Forbidden" }
         }
     },
 
-    async getEmployeeById(userId: string) { 
+    async getEmployeeById(userId: string) {
         return await prisma.$queryRaw<Employee[]>`
             SELECT e.id, e.name, e.email, e.phone, 
                 d.id as department_id, d.name as department_name, 
@@ -49,19 +57,19 @@ export const employeeModel = {
         `
     },
 
-    async getDepartmentByName(name: string) { 
+    async getDepartmentByName(name: string) {
         return await prisma.$queryRaw<{ id: string }[]>`
             SELECT id FROM department WHERE name = ${name}
         `
     },
 
-    async getPositionByName(name: string) { 
+    async getPositionByName(name: string) {
         return await prisma.$queryRaw<{ id: string }[]>`
             SELECT id FROM position WHERE name = ${name}
         `
     },
 
-    async addEmployee(code: string, name: string, email: string, phone: string, departmentId: string, positionId: string, roleId: number) { 
+    async addEmployee(code: string, name: string, email: string, phone: string, departmentId: string, positionId: string, roleId: number) {
         return await prisma.$executeRaw`
             WITH inserted_employee AS (
                 INSERT INTO employee (code, name, email, phone, department_id, position_id, role_id, hire_date, status)
@@ -74,17 +82,33 @@ export const employeeModel = {
         `
     },
 
-    async updateEmployee(userId: string, code: string, name: string, email: string, phone: string, departmentId: string, positionId: string, roleId: number, status: string) { 
+    async updateEmployee(userId: string, code: string, name: string, email: string, phone: string, departmentId: string, positionId: string, roleId: number) {
         return await prisma.$executeRaw`
             UPDATE employee 
-            SET code = ${code}, name = ${name}, email = ${email}, phone = ${phone}, department_id = ${departmentId}::uuid, position_id = ${positionId}::uuid, role_id = ${roleId}, status = ${status}::"Status"
+            SET code = ${code}, name = ${name}, email = ${email}, phone = ${phone}, department_id = ${departmentId}::uuid, position_id = ${positionId}::uuid, role_id = ${roleId}
             WHERE id = ${userId}::uuid
         `
     },
 
-    async deleteEmployee(userId: string) { 
+    async deleteEmployee(userId: string) {
         return await prisma.$executeRaw`
             DELETE FROM employee WHERE id = ${userId}::uuid
+        `
+    },
+
+    async totalEmployee() {
+        return await prisma.$queryRaw <{
+            total: number
+        }[]>`
+            SELECT COUNT(*)::int as total FROM employee
+        `
+    },
+
+    async inactiveEmployee(userId: string, status: string) { 
+        return await prisma.$executeRaw`
+            UPDATE employee
+            SET status = ${status}::"Status"
+            WHERE id = ${userId}::uuid
         `
     }
 

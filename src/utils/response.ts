@@ -1,7 +1,7 @@
 import { Context } from "hono"
 import { ContentfulStatusCode } from "hono/utils/http-status"
 
-export const res = (c: Context, method: string, statusCode: ContentfulStatusCode, message: string = "", data: any = {}, c_page: number = 0, t_page: number = 0, t_row: number = 0 ) =>{
+export const res = (c: Context, method: string, statusCode: ContentfulStatusCode, message: string = "", data: any = {}, c_page: number = 0, t_page: number = 0, t_items: number = 0 ) =>{
     let status: boolean = [200, 201].includes(statusCode);
 
     const err = c.json({
@@ -19,7 +19,7 @@ export const res = (c: Context, method: string, statusCode: ContentfulStatusCode
                     meta: {
                         current_page: c_page,
                         total_page: t_page,
-                        total_row: t_row
+                        total_items: t_items
                     },
                     message: message,
                     data: data

@@ -2,7 +2,7 @@ import type { Context } from "hono"
 import { z } from "zod"
 import { employeeModel } from "@/models/employee.model"
 import { res } from "@/utils/response"
-import { IEmployee, roleMap, TRegister, TUpdate } from "@/types/employee.type"
+import { IEmployee, roleMap, TRegister, TUpdate, TStatus } from "@/types/employee.type"
 
 const registerValidationSchema = z.object({
     code: z.string().nonempty({message: "ID is required"}),
@@ -42,9 +42,16 @@ export const employeeController = {
             const user = c.get("employee")
             if (!user) return res(c, 'err', 401, "Unauthorized")
 
-            const result = await employeeModel.getEmployees(user.role, user.id) as IEmployee[]
+            const c_page = Number(c.req.query("page"))
+            const p_limit = Number(c.req.query("limit"))
+            const search = c.req.query("search")
+            const t_items = await employeeModel.totalEmployee()
+            const t_page = Math.ceil(t_items[0].total / p_limit)
+            
+            const result = await employeeModel.getEmployees(user.role, user.id, c_page, p_limit, search) as IEmployee[]
+            
 
-            return res(c, 'get', 200, "Get all employee success", result.map(formatEmployeeData))
+            return res(c, 'get', 200, "Get all employee success", result.map(formatEmployeeData), c_page, t_page, t_items[0].total)
         } catch (error) {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")       
         }
@@ -103,7 +110,7 @@ export const employeeController = {
             if (!user) return res(c, 'err', 401, "Unauthorized")
                 
             const body = await c.req.json<TUpdate>()
-            const { code, name, email, phone, department, position, role, status } = body
+            const { code, name, email, phone, department, position, role } = body
 
             const userId = c.req.param("id")
             const getEmployeeId = await employeeModel.getEmployeeById(userId)
@@ -123,7 +130,7 @@ export const employeeController = {
             const roleId = roleMap[role]
 
             const result = await employeeModel.updateEmployee(
-                userId, code, name, email, phone, uuidDepartment[0]?.id, uuidPosition[0]?.id, roleId, status
+                userId, code, name, email, phone, uuidDepartment[0]?.id, uuidPosition[0]?.id, roleId
             )
 
             return res(c, 'put', 200, "Update employee success")
@@ -149,6 +156,24 @@ export const employeeController = {
             const result = await employeeModel.deleteEmployee(userId)
 
             return res(c, 'delete', 200, "Delete employee success")
+        } catch (error) {
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error") 
+        }
+    },
+
+    async statusEmployee(c: Context) { 
+        try {
+            const user = c.get("employee")
+            if (!user) return res(c, 'err', 401, "Unauthorized")
+            
+            const body = await c.req.json<TStatus>()
+            const { status } = body
+
+            const userId = c.req.param("id")
+
+            const result = await employeeModel.inactiveEmployee(userId, status)
+
+            return res(c, 'patch', 200, "Inactive employee success")
         } catch (error) {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error") 
         }

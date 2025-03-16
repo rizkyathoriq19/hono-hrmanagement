@@ -11,11 +11,17 @@ const r = new Hono()
 // Auth
 r.post("/auth/login", authController.login)
 
+// Dropdown
+r.get("/dropdown/department", authMiddleware, authController.getDepartment)
+r.get("/dropdown/position/:id", authMiddleware, authController.getPosition)
+r.get("/dropdown/role", authMiddleware, authController.getRole)
+
 // Employee
 r.get("/employee/all", authMiddleware, roleMiddleware("view_employee"), employeeController.getEmployees)
 r.get("/employee/:id", authMiddleware, roleMiddleware("view_employee"), employeeController.getEmployeeById)
 r.post("/employee/add", authMiddleware, roleMiddleware("create_employee"), employeeController.addEmployee)
 r.put("/employee/update/:id", authMiddleware, roleMiddleware("update_employee"), employeeController.updateEmployee)
+r.patch("/employee/status/:id", authMiddleware, roleMiddleware("update_employee"), employeeController.statusEmployee)
 r.delete("/employee/delete/:id", authMiddleware, roleMiddleware("delete_employee"), employeeController.deleteEmployee)
 
 // Attendance

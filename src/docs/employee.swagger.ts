@@ -344,6 +344,99 @@ export const employeeSwagger = {
     },
 
     /**
+     * 🔹 Route: Inactive Employee
+     */
+    statusEmployeeRoute() {
+        return createRoute({
+            method: 'patch',
+            path: '/employee/status/{id}',
+            tags: ['Employee'],
+            security: [{ Bearer: [] }],
+            parameters: [{
+                name: "id",
+                in: "path",
+                required: true,
+                schema: { type: "string", format: "uuid" },
+                description: "The employee ID (must match the logged-in user's ID unless the user has special permissions)."
+            }],              
+            responses: {
+                200: {
+                    description: "Update status employee success",
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                status: z.boolean().default(true),
+                                code: z.number().default(200),
+                                message: z.string()
+                            })
+                        }
+                    }
+                },
+                400: {
+                    description: "Bad request",
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                status: z.boolean().default(false),
+                                code: z.number().default(400),
+                                message: z.string()
+                            })
+                        }
+                    }
+                },                
+                401: {
+                    description: "Unauthorized",
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                status: z.boolean().default(false),
+                                code: z.number().default(401),
+                                message: z.string()
+                            })
+                        }
+                    }
+                },
+                403: {
+                    description: "Forbidden",
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                status: z.boolean().default(false),
+                                code: z.number().default(403),
+                                message: z.string()
+                            })
+                        }
+                    }
+                },                
+                404: {
+                    description: "Not found",
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                status: z.boolean().default(false),
+                                code: z.number().default(404),
+                                message: z.string()
+                            })
+                        }
+                    }
+                },        
+                500: {
+                    description: "Internal server error",
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                status: z.boolean().default(false),
+                                code: z.number().default(500),
+                                message: z.string()
+                            })
+                        }
+                    }
+                }
+            }
+        })
+    },
+
+    /**
      * 🔹 Route: Delete Employee
      */
     deleteEmployeeRoute() {

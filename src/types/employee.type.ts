@@ -10,7 +10,9 @@ export type TRegister = {
     role: "Manager" | "Staff" | "HR"
 }
 
-export type TUpdate = TRegister & {
+export type TUpdate = TRegister
+
+export type TStatus = {
     status: "ACTIVE" | "INACTIVE"
 }
 
