@@ -8,26 +8,50 @@ datasource db {
 }
 
 model Employee {
-  id              String             @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  name            String
-  email           String             @unique
-  phone           String?
-  department_id   String             @db.Uuid
-  position_id     String             @db.Uuid
-  role_id         Int
-  hire_date       DateTime
-  status          Status
-  code            String             @unique
-  attendances     Attendance[]
-  department      Department         @relation(fields: [department_id], references: [id], onDelete: Cascade)
-  position        Position           @relation(fields: [position_id], references: [id], onDelete: Cascade)
-  role            Role               @relation(fields: [role_id], references: [id], onDelete: Cascade)
-  trainings       EmployeeTraining[]
-  leaves          Leave[]
-  loans           Loan[]
-  payrolls        Payroll[]
-  reimbursements  Reimbursement[]
-  userCredentials UserCredentials[]
+  id                String              @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  name              String
+  email             String              @unique
+  phone             String?
+  department_id     String              @db.Uuid
+  position_id       String              @db.Uuid
+  role_id           Int
+  hire_date         DateTime
+  status            Status
+  code              String              @unique
+  identification_no String              @unique
+  image             String?
+  birth_date        DateTime
+  birth_place       String
+  gender            Gender
+  blood_type        BloodType?
+  address           String
+  village_id        BigInt
+  district_id       BigInt
+  city_id           BigInt
+  province_id       BigInt
+  country_id        BigInt
+  zip_code          String
+  religion          Religion
+  married_status    MarriedStatus
+  citizen_status    CitizenStatus
+  is_active         Boolean
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  attendances       Attendance[]
+  department        Department          @relation(fields: [department_id], references: [id], onDelete: Cascade)
+  position          Position            @relation(fields: [position_id], references: [id], onDelete: Cascade)
+  role              Role                @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  trainings         EmployeeTraining[]
+  leaves            Leave[]
+  loans             Loan[]
+  payrolls          Payroll[]
+  reimbursements    Reimbursement[]
+  userCredentials   UserCredentials[]
+  country           Country             @relation(fields: [country_id], references: [id], onDelete: Cascade)
+  province          Province            @relation(fields: [province_id], references: [id], onDelete: Cascade)
+  city              City                @relation(fields: [city_id], references: [id], onDelete: Cascade)
+  district          District            @relation(fields: [district_id], references: [id], onDelete: Cascade)
+  village           Village             @relation(fields: [village_id], references: [id], onDelete: Cascade)
 
   @@map("employee")
 }
@@ -181,9 +205,112 @@ model Loan {
   @@map("loan")
 }
 
+model Country {
+  id          BigInt     @id @default(autoincrement())
+  name        String?
+  alt_name    String?
+  latitude    Decimal?   @db.Decimal(10, 7)
+  longitude   Decimal?   @db.Decimal(10, 7)
+  employees   Employee[]
+  provinces   Province[]
+
+  @@map("country")
+}
+
+model Province {
+  id          BigInt      @id @default(autoincrement())
+  name        String
+  alt_name    String?
+  latitude    Decimal?    @db.Decimal(10, 7)
+  longitude   Decimal?    @db.Decimal(10, 7)
+  country_id  BigInt
+  employees   Employee[]  
+  cities      City[]
+  country     Country     @relation(fields: [country_id], references: [id], onDelete: Cascade)
+
+  @@map("province")
+}
+
+model City {
+  id          BigInt     @id @default(autoincrement())
+  name        String
+  alt_name    String?
+  latitude    Decimal?   @db.Decimal(10, 7)
+  longitude   Decimal?   @db.Decimal(10, 7)
+  province_id BigInt
+  employees   Employee[]
+  districts   District[]
+  province    Province   @relation(fields: [province_id], references: [id], onDelete: Cascade)
+
+  @@map("city")
+}
+
+model District {
+  id          BigInt     @id @default(autoincrement())
+  name        String
+  alt_name    String?
+  latitude    Decimal?   @db.Decimal(10, 7)
+  longitude   Decimal?   @db.Decimal(10, 7)
+  city_id     BigInt
+  employees   Employee[]
+  villages    Village[]
+  city       City       @relation(fields: [city_id], references: [id], onDelete: Cascade)
+
+  @@map("district")
+}
+
+model Village {
+  id          BigInt     @id @default(autoincrement())
+  name        String
+  alt_name    String?
+  latitude    Decimal?   @db.Decimal(10, 7)
+  longitude   Decimal?   @db.Decimal(10, 7)
+  district_id BigInt
+  employees   Employee[]
+  district    District   @relation(fields: [district_id], references: [id], onDelete: Cascade)
+
+  @@map("village")
+}
+
 enum Status {
   ACTIVE
   INACTIVE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum BloodType {
+  A
+  B
+  AB
+  O
+}
+
+enum Religion {
+  ISLAM
+  CHRISTIAN
+  CATHOLIC
+  HINDU
+  BUDDHIST
+  CONFUCIAN
+  OTHER
+}
+
+enum MarriedStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+enum CitizenStatus {
+  CITIZEN
+  PERMANENT_RESIDENT
+  TEMPORARY_RESIDENT
+  FOREIGNER
 }
 
 enum AttendanceStatus {
