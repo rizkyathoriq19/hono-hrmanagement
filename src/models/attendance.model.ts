@@ -1,11 +1,11 @@
 import { prisma } from "@/lib/encryption";
-import type { Attendance } from "@prisma/client";
+import { IAttendance } from "@/types/attendance.type";
 
 export const attendanceModel = {
     async getAttendances(role: string, userId: string) {
         switch (role) { 
             case "HR":
-                return await prisma.$queryRaw<Attendance[]>`
+                return await prisma.$queryRaw<IAttendance[]>`
                     SELECT at.id, e.id as employee_id, e.name as employee_name, d.id as department_id, d.name as department_name, p.id as position_id, p.name as position_name, at.check_in, at.check_out, at.date, at.work_status, at.work_duration, at.status
                     FROM attendance at
                     JOIN employee e ON at.employee_id = e.id
@@ -13,7 +13,7 @@ export const attendanceModel = {
                     JOIN position p ON e.position_id = p.id
                 `
             case "Manager":
-                return await prisma.$queryRaw<Attendance[]>`
+                return await prisma.$queryRaw<IAttendance[]>`
                     SELECT at.id, e.id as employee_id, e.name as employee_name, d.id as department_id, d.name as department_name, p.id as position_id, p.name as position_name, at.check_in, at.check_out, at.date, at.work_status, at.work_duration, at.status
                     FROM attendance at
                     JOIN employee e ON at.employee_id = e.id
@@ -22,12 +22,12 @@ export const attendanceModel = {
                     WHERE e.department_id = (SELECT department_id FROM employee WHERE id = ${userId}::uuid)
                 ` 
             default:
-                return { status: false, error: "Forbidden" }
+                return []
         }               
     },
 
     async getAttendanceById(userId: string) {
-        return await prisma.$queryRaw<Attendance[]>`
+        return await prisma.$queryRaw<IAttendance[]>`
             SELECT at.id, e.id as employee_id, e.name as employee_name, d.id as department_id, d.name as department_name, p.id as position_id, p.name as position_name, at.check_in, at.check_out, at.date, at.work_status, at.work_duration, at.status
             FROM attendance at
             JOIN employee e ON at.employee_id = e.id

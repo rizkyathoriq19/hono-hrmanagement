@@ -9,7 +9,7 @@ export interface IUserToken {
 }
 
 export const generateToken = (user: IUserToken) => {
-    const expiresIn = Math.floor(Date.now() / 1000) * 60 * 60
+    const expiresIn = Math.floor(Date.now() / 1000) + (60 * 60 * 3);
     const token = sign({ ...user, exp: expiresIn }, SECRET)
     return token
 }

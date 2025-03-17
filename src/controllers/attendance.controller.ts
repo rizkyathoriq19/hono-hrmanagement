@@ -35,7 +35,7 @@ export const attendanceController = {
             const user = c.get("employee")
             if (!user) return res(c, 'err', 401, "Unauthorized") 
 
-            const result = await attendanceModel.getAttendances(user.role, user.id) as IAttendance[]
+            const result = await attendanceModel.getAttendances(user.role, user.id)
 
             return res(c, 'get', 200, "Get all attendance success", result.map(formatAttendanceData)) 
         } catch (error) {
@@ -51,7 +51,7 @@ export const attendanceController = {
             const userId = c.req.param("id")
             if (!userId) return res(c, 'err', 404, "Employee not found") 
 
-            const result = await attendanceModel.getAttendanceById(userId) as IAttendance[]
+            const result = await attendanceModel.getAttendanceById(userId)
 
             return res(c, 'getDetail', 200, "Get attendance success", result.map(formatAttendanceData)[0]) 
         } catch (error) {
