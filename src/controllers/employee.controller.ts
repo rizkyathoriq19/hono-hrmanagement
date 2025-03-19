@@ -53,6 +53,10 @@ const formatEmployeeData = (employee: IEmployee) => ({
         id: employee.role_id,
         name: employee.role_name,
     },
+    manager: {
+        id: employee.manager_id,
+        name: employee.manager_name
+    },
     hire_date: employee.hire_date,
     status: employee.status,
     code: employee.code,
@@ -114,7 +118,7 @@ export const employeeController = {
 
     async addEmployee(c: Context) {
         const body = await c.req.json<TRegister>()
-        const { code, name, email, phone, department, position, role, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status } = body
+        const { code, name, email, phone, department, position, role, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, manager } = body
 
         try {
             const user = c.get("employee")
@@ -133,7 +137,7 @@ export const employeeController = {
             const roleId = roleMap[role];
 
             const result = await employeeModel.addEmployee(
-                code, name, email, phone, uuidDepartment[0]?.id, uuidPosition[0]?.id, roleId, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status
+                code, name, email, phone, uuidDepartment[0]?.id, uuidPosition[0]?.id, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status
             )
             
             if (!result) return res(c, 'err', 500, "Failed to add employee")

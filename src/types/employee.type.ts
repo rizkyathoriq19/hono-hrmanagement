@@ -8,6 +8,8 @@ export type TRegister = {
     department: string
     position: string
     role: "Manager" | "Staff" | "HR"
+    manager: string
+    hire_date: Date
     identification_no: string
     image: string
     birth_date: Date
@@ -49,6 +51,8 @@ export interface IEmployee {
     position_name: string
     role_id: number
     role_name: string
+    manager_id: string | null
+    manager_name: string | null
     hire_date: Date
     status: string
     code: string
@@ -76,4 +80,5 @@ export interface IEmployee {
     is_active: boolean
     created_at: Date
     updated_at: Date
+    deleted_at: Date | null
 }

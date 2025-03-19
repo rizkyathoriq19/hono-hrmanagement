@@ -1,5 +1,6 @@
 import { Hono } from "hono"
 import { authController } from "@/controllers/auth.controller.js"
+import { dropdownController } from "@/controllers/dropdown.controller.js"
 import { employeeController } from "@/controllers/employee.controller.js"
 import { attendanceController } from "@/controllers/attendance.controller.js"
 import { authMiddleware } from "@/middlewares/auth.middleware.js"
@@ -15,6 +16,11 @@ r.post("/auth/login", authController.login)
 r.get("/dropdown/department", authMiddleware, authController.getDepartment)
 r.get("/dropdown/position/:id", authMiddleware, authController.getPosition)
 r.get("/dropdown/role", authMiddleware, authController.getRole)
+r.get("/dropdown/country", authMiddleware, dropdownController.getCountry)
+r.get("/dropdown/province/:id", authMiddleware, dropdownController.getProvince)
+r.get("/dropdown/city/:id", authMiddleware, dropdownController.getCity)
+r.get("/dropdown/district/:id", authMiddleware, dropdownController.getDistrict)
+r.get("/dropdown/village/:id", authMiddleware, dropdownController.getVillage)
 
 // Employee
 r.get("/employee/all", authMiddleware, roleMiddleware("view_employee"), employeeController.getEmployees)

@@ -15,13 +15,14 @@ model Employee {
   department_id     String              @db.Uuid
   position_id       String              @db.Uuid
   role_id           Int
+  manager_id        String?             @db.Uuid
   hire_date         DateTime
   status            Status
   code              String              @unique
   identification_no String              @unique
   image             String?
   birth_date        DateTime
-  birth_place       String
+  birth_place       String?
   gender            Gender
   blood_type        BloodType?
   address           String
@@ -36,7 +37,8 @@ model Employee {
   citizen_status    CitizenStatus
   is_active         Boolean
   created_at        DateTime            @default(now())
-  updated_at        DateTime            @updatedAt
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?
   attendances       Attendance[]
   department        Department          @relation(fields: [department_id], references: [id], onDelete: Cascade)
   position          Position            @relation(fields: [position_id], references: [id], onDelete: Cascade)
@@ -62,6 +64,9 @@ model UserCredentials {
   password   String
   employee_id String   @db.Uuid
   code       String   @unique
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   employee   Employee @relation(fields: [employee_id], references: [id], onDelete: Cascade)
 
   @@map("user_credentials")
@@ -70,6 +75,9 @@ model UserCredentials {
 model Department {
   id        String     @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   name      String     @unique
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   employees Employee[]
   positions Position[]
 
@@ -80,6 +88,9 @@ model Position {
   id           String     @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
   name        String
   department_id String     @db.Uuid
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   employees    Employee[]
   department   Department @relation(fields: [department_id], references: [id], onDelete: Cascade)
 
@@ -89,6 +100,9 @@ model Position {
 model Role {
   id          Int              @id @default(autoincrement())
   name        String           @unique
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   employees   Employee[]
   permissions RolePermission[]
 
@@ -99,6 +113,9 @@ model Permission {
   id          Int              @id @default(autoincrement())
   name        String           @unique
   description String?
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   roles       RolePermission[]
 
   @@map("permission")
@@ -108,6 +125,9 @@ model RolePermission {
   id           Int        @id @default(autoincrement())
   role_id       Int
   permission_id Int
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   permission   Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
   role         Role       @relation(fields: [role_id], references: [id], onDelete: Cascade)
 
@@ -128,6 +148,9 @@ model Attendance {
   work_duration  Int?
   work_status    WorkStatus?
   status        AttendanceStatus
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?
   employee      Employee        @relation(fields: [employee_id], references: [id], onDelete: Cascade)
 
   @@map("attendance")
@@ -141,6 +164,9 @@ model Payroll {
   deductions  Decimal  @db.Decimal(10, 2)
   net_salary   Decimal  @db.Decimal(10, 2)
   payment_date DateTime
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   employee    Employee @relation(fields: [employee_id], references: [id], onDelete: Cascade)
 
   @@map("payroll")
@@ -153,6 +179,9 @@ model Leave {
   start_date  DateTime
   end_date    DateTime
   status     LeaveStatus
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   employee   Employee    @relation(fields: [employee_id], references: [id], onDelete: Cascade)
 
   @@map("leave")
@@ -165,6 +194,9 @@ model Reimbursement {
   category       String?
   submission_date DateTime
   status         ReimbursementStatus
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   employee       Employee            @relation(fields: [employee_id], references: [id], onDelete: Cascade)
 
   @@map("reimbursement")
@@ -176,6 +208,9 @@ model Training {
   description String?
   date        DateTime
   trainer     String
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   employees   EmployeeTraining[]
 
   @@map("training")
@@ -186,6 +221,9 @@ model EmployeeTraining {
   employee_id String         @db.Uuid
   training_id BigInt
   status     TrainingStatus
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   employee   Employee       @relation(fields: [employee_id], references: [id], onDelete: Cascade)
   training   Training       @relation(fields: [training_id], references: [id], onDelete: Cascade)
 
@@ -200,6 +238,9 @@ model Loan {
   loan_date    DateTime
   installment Decimal    @db.Decimal(10, 2)
   status      LoanStatus
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   employee    Employee   @relation(fields: [employee_id], references: [id], onDelete: Cascade)
 
   @@map("loan")
@@ -211,6 +252,9 @@ model Country {
   alt_name    String?
   latitude    Decimal?   @db.Decimal(10, 7)
   longitude   Decimal?   @db.Decimal(10, 7)
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   employees   Employee[]
   provinces   Province[]
 
@@ -224,6 +268,9 @@ model Province {
   latitude    Decimal?    @db.Decimal(10, 7)
   longitude   Decimal?    @db.Decimal(10, 7)
   country_id  BigInt
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   employees   Employee[]  
   cities      City[]
   country     Country     @relation(fields: [country_id], references: [id], onDelete: Cascade)
@@ -238,6 +285,9 @@ model City {
   latitude    Decimal?   @db.Decimal(10, 7)
   longitude   Decimal?   @db.Decimal(10, 7)
   province_id BigInt
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   employees   Employee[]
   districts   District[]
   province    Province   @relation(fields: [province_id], references: [id], onDelete: Cascade)
@@ -252,6 +302,9 @@ model District {
   latitude    Decimal?   @db.Decimal(10, 7)
   longitude   Decimal?   @db.Decimal(10, 7)
   city_id     BigInt
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   employees   Employee[]
   villages    Village[]
   city       City       @relation(fields: [city_id], references: [id], onDelete: Cascade)
@@ -266,6 +319,9 @@ model Village {
   latitude    Decimal?   @db.Decimal(10, 7)
   longitude   Decimal?   @db.Decimal(10, 7)
   district_id BigInt
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @default(now())   @updatedAt
+  deleted_at        DateTime?  
   employees   Employee[]
   district    District   @relation(fields: [district_id], references: [id], onDelete: Cascade)
 

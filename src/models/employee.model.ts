@@ -58,9 +58,9 @@ export const employeeModel = {
                     JOIN city city ON e.city_id = city.id
                     JOIN province prov ON e.province_id = prov.id
                     JOIN country cnt ON e.country_id = cnt.id
-                    WHERE e.name ILIKE ${searchQuery}
-                    OR e.code ILIKE ${searchQuery}
-                    AND WHERE e.department_id = (SELECT department_id FROM employee WHERE id = ${userId}::uuid)                
+                    WHERE (e.name ILIKE ${searchQuery}
+                    OR e.code ILIKE ${searchQuery})
+                    AND e.department_id = (SELECT department_id FROM employee WHERE id = ${userId}::uuid)                
                     ORDER BY e.hire_date ASC
                     LIMIT ${p_limit} OFFSET ${(c_page - 1) * p_limit}                    
                 `
@@ -109,11 +109,11 @@ export const employeeModel = {
         `
     },
 
-    async addEmployee(code: string, name: string, email: string, phone: string, departmentId: string, positionId: string, roleId: number, identificationNumber: string, image: string, birthDate: Date, birthPlace: string, gender: string, bloodType: string, address: string, villageId: number, districtId: number, cityId: number, provinceId: number, countryId: number, zipCode: string, religion: string, marriedStatus: string, citizenStatus: string) {
+    async addEmployee(code: string, name: string, email: string, phone: string, departmentId: string, positionId: string, roleId: number, hire_date: Date, identificationNumber: string, image: string, birthDate: Date, birthPlace: string, gender: string, bloodType: string, address: string, villageId: number, districtId: number, cityId: number, provinceId: number, countryId: number, zipCode: string, religion: string, marriedStatus: string, citizenStatus: string) {
         return await prisma.$executeRaw`
             WITH inserted_employee AS (
-                INSERT INTO employee (code, name, email, phone, department_id, position_id, role_id, hire_date, status, identification_no, image, birth_date, birth_place, gender, blood_type, address, village_id, district_id, city_id, province_id, country_id, zip_code, religion, married_status, citizen_status, is_active, updated_at)
-                VALUES (${code}, ${name}, ${email}, ${phone}, ${departmentId}::uuid, ${positionId}::uuid, ${roleId}, NOW(), ${'ACTIVE'}::"Status", ${identificationNumber}, ${image}, ${birthDate}, ${birthPlace}, ${gender}, ${bloodType}, ${address}, ${villageId}, ${districtId}, ${cityId}, ${provinceId}, ${countryId}, ${zipCode}, ${religion}, ${marriedStatus}, ${citizenStatus}, ${true}, NOW())
+                INSERT INTO employee (code, name, email, phone, department_id, position_id, role_id, hire_date, status, identification_no, image, birth_date, birth_place, gender, blood_type, address, village_id, district_id, city_id, province_id, country_id, zip_code, religion, married_status, citizen_status, is_active)
+                VALUES (${code}, ${name}, ${email}, ${phone}, ${departmentId}::uuid, ${positionId}::uuid, ${roleId}, ${hire_date}, ${'ACTIVE'}::"Status", ${identificationNumber}, ${image}, ${birthDate}, ${birthPlace}, ${gender}, ${bloodType}, ${address}, ${villageId}, ${districtId}, ${cityId}, ${provinceId}, ${countryId}, ${zipCode}, ${religion}, ${marriedStatus}, ${citizenStatus}, ${true})
                 RETURNING id, code, email
             )
             INSERT INTO user_credentials (email, password, employee_id, code)

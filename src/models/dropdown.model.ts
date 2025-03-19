@@ -1,0 +1,43 @@
+import { prisma } from "@/lib/encryption"
+
+export const dropdownModel = {
+    async getCountry() {
+        return await prisma.$queryRaw`
+            SELECT id, name
+            FROM country
+        `
+    },
+
+    async getProvince(countryId: number) {
+        return await prisma.$queryRaw`
+            SELECT id, name
+            FROM province
+            WHERE country_id = ${countryId}
+        `
+    },
+
+    async getCity(provinceId: number) {
+        return await prisma.$queryRaw`
+            SELECT id, name
+            FROM city
+            WHERE province_id = ${provinceId}
+        `
+
+    },
+
+    async getDistrict(cityId: number) { 
+        return await prisma.$queryRaw`
+            SELECT id, name
+            FROM district
+            WHERE city_id = ${cityId}
+        `
+    },
+
+    async getVillage(districId: number) {
+        return await prisma.$queryRaw`
+            SELECT id, name
+            FROM village
+            WHERE district_id = ${districId}
+        `
+    },
+}

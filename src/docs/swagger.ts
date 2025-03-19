@@ -1,5 +1,6 @@
 import { OpenAPIHono } from "@hono/zod-openapi"
 import { authSwagger } from "./auth.swagger"
+import { dropdownSwagger } from "./dropdown.swagger"
 import { employeeSwagger } from "./employee.swagger"
 import { attendanceSwagger } from "./attendance.swagger"
 import { payrollSwagger } from "./payroll.swagger"
@@ -13,9 +14,16 @@ swagger.openAPIRegistry.registerComponent('securitySchemes', 'Bearer', {
 
 // Auth
 swagger.openAPIRegistry.registerPath(authSwagger.loginRoute())
+
+// Dropdown
 swagger.openAPIRegistry.registerPath(authSwagger.getDepartmentRoute())
 swagger.openAPIRegistry.registerPath(authSwagger.getPositionRoute())
 swagger.openAPIRegistry.registerPath(authSwagger.getRoleRoute())
+swagger.openAPIRegistry.registerPath(dropdownSwagger.getCountryRoute())
+swagger.openAPIRegistry.registerPath(dropdownSwagger.getProvinceRoute())
+swagger.openAPIRegistry.registerPath(dropdownSwagger.getCityRoute())
+swagger.openAPIRegistry.registerPath(dropdownSwagger.getDistrictRoute())
+swagger.openAPIRegistry.registerPath(dropdownSwagger.getVillageRoute())
 
 // Employee
 swagger.openAPIRegistry.registerPath(employeeSwagger.getEmployeesRoute())
