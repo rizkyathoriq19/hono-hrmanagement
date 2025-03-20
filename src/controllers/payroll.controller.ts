@@ -2,14 +2,11 @@ import { Context } from "hono"
 import { z } from "zod"
 import { payrollModel } from "@/models/payroll.model"
 import { res } from "@/utils/response"
+import { TAddPayroll, IPayroll } from "@/types/payroll.type"
+import xlsx from "xlsx"
 
-type TAddPayroll = {
-    employee: string,
-    basicSalary: number,
-    overtime: number,
-    deductions: number,
-    netSalary: number,
-    paymentDate: Date,
+const formatPayroll = (payroll: IPayroll) => { 
+
 }
 
 export const payrollController = {
@@ -56,7 +53,7 @@ export const payrollController = {
             if (!payrollId) return res(c, 'err', 404, "Payroll ID not found")
             
         } catch (error) {
-            
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")            
         }
         
     },
@@ -64,9 +61,27 @@ export const payrollController = {
     async delete(c: Context) { },
 
     async fileUpload(c: Context) { 
-        const body = await c.req.parseBody()
-        const file = body['xlsx']
+        try {
+            const body = await c.req.parseBody()
+            const file = body['payroll'] as File
 
-        console.log(file)
+            if (!file) return res(c, 'err', 404, "File not found")
+
+            const arrayBuffer = await file.arrayBuffer()
+            const buffer = Buffer.from(arrayBuffer)
+            
+            const workBook = xlsx.read(buffer, { type: 'buffer' })
+            const sheetName = workBook.SheetNames[0]
+            const sheet = workBook.Sheets[sheetName]
+
+            const data: IPayroll[] = xlsx.utils.sheet_to_json<IPayroll>(sheet)
+            if (!data) return res(c, 'err', 400, "File not valid")
+
+            const result = await payrollModel.fileUpload(data)
+
+            return res(c, 'postBatch', 200, "File uploaded", result)
+        } catch (error) {
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")           
+        }
     },
 }

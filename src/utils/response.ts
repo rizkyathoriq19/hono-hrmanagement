@@ -29,6 +29,7 @@ export const res = (c: Context, method: string, statusCode: ContentfulStatusCode
             }
         case "getDetail":
         case "login":
+        case "postBatch":
             if (status) {
                 return c.json({
                     status: status,

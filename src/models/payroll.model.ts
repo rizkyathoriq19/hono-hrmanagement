@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/encryption"   
+import { IPayroll } from "@/types/payroll.type"
+import { Prisma } from "@prisma/client"
 import type { Payroll } from "@prisma/client"
 
 export const payrollModel = {
@@ -7,6 +9,42 @@ export const payrollModel = {
             INSERT INTO payroll (employee_id, basic_salary, overtime, deductions, net_salary, payment_date)
             VALUES (${userId}::uuid, ${basicSalary}, ${overtime}, ${deductions}, ${netSalary}, ${paymentDate}::date)
         `
+    },
+
+    async fileUpload(data: IPayroll[]) { 
+        const employees = await prisma.$queryRaw<{ id: string, code: string, name: string }[]>`
+            SELECT id, code, name FROM employee WHERE code IN (${Prisma.join(data.map(d => d.code))})
+        `
+
+        const employeeMap = new Map(employees.map(e => [`${e.code}-${e.name}`, e.id]))
+        const payrollData = data
+            .map(row => ({
+                employee_id: employeeMap.get(`${row.code}-${row.name}`),
+                basic_salary: row.basic_salary,
+                overtime: row.overtime,
+                deductions: row.deductions,
+                net_salary: row.net_salary,
+            }))
+            .filter(row => row.employee_id)
+
+        const placeholders = payrollData
+            .map((_, i) => `($${i * 5 + 1}::uuid, $${i * 5 + 2}::decimal(10,2), $${i * 5 + 3}::decimal(10,2), $${i * 5 + 4}::decimal(10,2), $${i * 5 + 5}::decimal(10,2), NOW())`)
+            .join(", ")
+
+        const values = payrollData.flatMap(row => [
+            row.employee_id,
+            row.basic_salary,
+            row.overtime,
+            row.deductions,
+            row.net_salary,
+        ])
+
+        await prisma.$executeRawUnsafe(
+            `INSERT INTO payroll (employee_id, basic_salary, overtime, deductions, net_salary, payment_date) VALUES ${placeholders}`,
+            ...values
+        )
+
+        return payrollData.length
     },
 
     async getPayrolls(role: string, userId: string) {

@@ -40,6 +40,7 @@ r.patch("/attendance/checkinout/:id", authMiddleware, roleMiddleware("check_in_o
 r.get("/payroll/all", authMiddleware, roleMiddleware("view_payroll"), payrollController.getAll)
 r.get("/payroll/:id", authMiddleware, roleMiddleware("view_payroll"), payrollController.getById)
 r.post("/payroll/add", authMiddleware, roleMiddleware("create_payroll"), payrollController.add)
+r.post("/payroll/upload", authMiddleware, roleMiddleware("create_payroll"), payrollController.fileUpload)
 r.put("/payroll/update/:id", authMiddleware, roleMiddleware("update_payroll"), payrollController.update)
 r.delete("/payroll/delete/:id", authMiddleware, roleMiddleware("delete_payroll"), payrollController.delete)
 
