@@ -41,5 +41,6 @@ swagger.openAPIRegistry.registerPath(attendanceSwagger.checkOutRoute())
 
 // Payroll
 swagger.openAPIRegistry.registerPath(payrollSwagger.getPayrollsRoute())
+swagger.openAPIRegistry.registerPath(payrollSwagger.fileUploadPayrollRoute())
 
 export default swagger

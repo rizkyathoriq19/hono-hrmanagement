@@ -62,6 +62,77 @@ export const payrollSwagger = {
                 },
             }
         })
-    }
+    },
 
+    fileUploadPayrollRoute() { 
+        return createRoute({
+            method: 'post',
+            path: '/payroll/upload',
+            tags: ['Payroll'],
+            security: [{ Bearer: [] }],
+            request: {
+                body: {
+                    content: {
+                        "multipart/form-data": {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    payroll: {
+                                        type: 'string',
+                                        format: 'binary'
+                                    }
+                                },
+                                required: ['payroll']
+                            },
+                            encoding: {
+                                payroll: {
+                                    contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                                }
+                            }
+                        }
+                    },
+                    required: true
+                }
+            },
+            responses: {
+                200: {
+                    description: 'File upload success',
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                status: z.boolean(),
+                                code: z.number().default(200),
+                                message: z.string(),
+                                data: z.number()
+                            })
+                        }
+                    }
+                },
+                401: {
+                    description: 'Unauthorized',
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                status: z.boolean().default(false),
+                                code: z.number().default(401),
+                                message: z.string()
+                            })
+                        }
+                    }
+                },
+                500: {
+                    description: 'Internal server error',
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                status: z.boolean().default(false),
+                                code: z.number().default(500),
+                                message: z.string()
+                            })
+                        }
+                    }
+                },
+            }
+        })
+    },
 }
