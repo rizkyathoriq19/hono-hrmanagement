@@ -1,5 +1,5 @@
 import type { Context } from "hono"
-import { generateToken } from "@/utils/jwt.js"
+import { generateToken, refreshGenerateToken } from "@/utils/jwt.js"
 import { authModel } from "@/models/auth.model"
 import { res } from "@/utils/response"
 import { TLogin, ILogin } from "@/types/auth.type"
@@ -30,10 +30,15 @@ export const authController = {
                 id: userByIdentifier[0].id,
                 role: userByIdentifier[0].role
             })
+
+            const refresh_token = await refreshGenerateToken({
+                id: userByIdentifier[0].id,
+                role: userByIdentifier[0].role
+            })
             
             const getData = await authModel.getLoginData(identifier) as ILogin[]
 
-            return res(c, 'login', 200, "Login successful", { token, user: getData.map(formatLogin)[0] })
+            return res(c, 'login', 200, "Login successful", { token, refresh_token, user: getData.map(formatLogin)[0] })
         } catch (error) {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
         }

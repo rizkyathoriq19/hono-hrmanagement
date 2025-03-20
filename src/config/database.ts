@@ -11,8 +11,11 @@ export default sql;
 
 export const connectDB = async () => {
   try {
-    await sql`SELECT 1`;
-    console.log('✅ PostgreSQL Connected!');
+    const result = await sql`SELECT version()`;
+    const regex = /PostgreSQL (\d+\.\d+(?:\.\d+)?)/;
+    const version = result[0].version.match(regex);
+
+    console.log(`✅ PostgreSQL Connected! at version ${version[1]}`);
   } catch (error) {
     console.error('❌ Database Connection Error:', error);
     process.exit(1);
