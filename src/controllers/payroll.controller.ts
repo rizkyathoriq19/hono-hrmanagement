@@ -5,9 +5,18 @@ import { res } from "@/utils/response"
 import { TAddPayroll, IPayroll } from "@/types/payroll.type"
 import xlsx from "xlsx"
 
-const formatPayroll = (payroll: IPayroll) => { 
-
-}
+const formatPayroll = (payroll: IPayroll) => ({ 
+    id: Number(payroll.id),
+    employee: {
+        id: payroll.employee_id,
+        name: payroll.employee_name
+    },
+    basicSalary: payroll.basic_salary,
+    overtime: payroll.overtime,
+    deductions: payroll.deductions,
+    netSalary: payroll.net_salary,
+    paymentDate: payroll.payment_date
+})
 
 export const payrollController = {
     async add(c: Context) { },
@@ -19,7 +28,7 @@ export const payrollController = {
 
             const result = await payrollModel.getPayrolls(user.role, user.id)
 
-            return res(c, 'err', 200, "Get all payroll success", result) 
+            return res(c, 'get', 200, "Get all payroll success", result.map(formatPayroll)) 
         } catch (error) {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")  
         }
@@ -43,7 +52,7 @@ export const payrollController = {
 
     async update(c: Context) { 
         const body = await c.req.json<TAddPayroll>()
-        const { employee, basicSalary, overtime, deductions, netSalary,paymentDate } = body
+        // const { employee, basicSalary, overtime, deductions, netSalary,paymentDate } = body
         
         try {
             const user = c.get("employee")
@@ -74,7 +83,7 @@ export const payrollController = {
             const sheetName = workBook.SheetNames[0]
             const sheet = workBook.Sheets[sheetName]
 
-            const data: IPayroll[] = xlsx.utils.sheet_to_json<IPayroll>(sheet)
+            const data: TAddPayroll[] = xlsx.utils.sheet_to_json<TAddPayroll>(sheet)
             if (!data) return res(c, 'err', 400, "File not valid")
 
             const result = await payrollModel.fileUpload(data)

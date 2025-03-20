@@ -96,9 +96,11 @@ export const attendanceController = {
             if (!attendance.length) return res(c, 'err', 404, "Attendance not found") 
             if (attendance[0].check_out) return res(c, 'err', 400, "You already checkout today") 
 
-            const now = new Date()
-            let workDuration: number = Math.floor((now.getTime() - new Date(attendance[0].check_in).getTime()) / 60000)
-            workDuration = Math.max(0, workDuration)
+            const now = new Date();
+            now.setHours(now.getHours() + 7);
+
+            let workDuration: number = Math.floor((new Date(now).getTime() - new Date(attendance[0].check_in).getTime()) / 60000)
+            workDuration = Math.max(0, workDuration);
 
             const MIN_FULL_TIME = 480
             const MIN_HALF_DAY = 240

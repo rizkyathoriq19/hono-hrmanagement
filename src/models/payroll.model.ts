@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/encryption"   
-import { IPayroll } from "@/types/payroll.type"
+import { TAddPayroll, IPayroll } from "@/types/payroll.type"
 import { Prisma } from "@prisma/client"
 import type { Payroll } from "@prisma/client"
 
@@ -11,7 +11,7 @@ export const payrollModel = {
         `
     },
 
-    async fileUpload(data: IPayroll[]) { 
+    async fileUpload(data: TAddPayroll[]) { 
         const employees = await prisma.$queryRaw<{ id: string, code: string, name: string }[]>`
             SELECT id, code, name FROM employee WHERE code IN (${Prisma.join(data.map(d => d.code))})
         `
@@ -50,20 +50,20 @@ export const payrollModel = {
     async getPayrolls(role: string, userId: string) {
         switch (role) { 
             case "HR":
-                return await prisma.$queryRaw<Payroll[]>`
-                    SELECT p.id, e.name as employee, p.basic_salary, p.overtime, p.deductions, p.net_salary, p.payment_date
+                return await prisma.$queryRaw<IPayroll[]>`
+                    SELECT p.id, e.id as employee_id, e.name as employee_name, p.basic_salary, p.overtime, p.deductions, p.net_salary, p.payment_date
                     FROM payroll p
                     JOIN employee e ON p.employee_id = e.id
                 `
             case "Manager":
-                return await prisma.$queryRaw<Payroll[]>`
+                return await prisma.$queryRaw<IPayroll[]>`
                     SELECT p.id, e.name as employee, p.basic_salary, p.overtime, p.deductions, p.net_salary, p.payment_date
                     FROM payroll p
                     JOIN employee e ON p.employee_id = e.id
                     WHERE e.department_id = (SELECT department_id FROM employee WHERE id = ${userId}::uuid)
                 `
             default:
-                return { status: false, error: "Forbidden" }
+                return []
         } 
     },
 
