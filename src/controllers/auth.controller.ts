@@ -38,42 +38,4 @@ export const authController = {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
         }
     },
-
-    async getDepartment(c: Context) { 
-        try {
-            const user = c.get("employee")
-            if (!user) return res(c, 'err', 401, "Unauthorized")
-            
-            const result = await authModel.getDepartment()
-            return res(c, 'get', 200, "Get department success", result)
-        } catch (error) {
-            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
-        }
-    },
-
-    async getPosition(c: Context) { 
-        try {
-            const user = c.get("employee")
-            if (!user) return res(c, 'err', 401, "Unauthorized")
-            
-            const departmentId = c.req.param("id")
-            const result = await authModel.getPosition(departmentId)
-
-            return res(c, 'get', 200, "Get position success", result)
-        } catch (error) {
-            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
-        }
-    },
-
-    async getRole(c: Context) { 
-        try {
-            const user = c.get("employee")
-            if (!user) return res(c, 'err', 401, "Unauthorized")
-            
-            const result = await authModel.getRole()
-            return res(c, 'get', 200, "Get role success", result)
-        } catch (error) {
-            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
-        }
-    }
 }
