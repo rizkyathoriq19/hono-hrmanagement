@@ -17,7 +17,7 @@ await connectDB()
 app.use(poweredBy())
 app.use(logger())
 
-app.get('/ui', swaggerUI({ url: '/doc/openapi.json' }));
+app.get('/docs', swaggerUI({ url: '/doc/openapi.json' }));
 app.get('/doc/openapi.json', (c) => {
   return c.json(swagger.getOpenAPIDocument({
     openapi: '3.1.0',

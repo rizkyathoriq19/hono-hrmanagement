@@ -1,16 +1,59 @@
 import type { Context } from "hono"
-import { generateToken } from "@/utils/jwt.js"
 import { dropdownModel } from "@/models/dropdown.model"
 import { res } from "@/utils/response"
 
+const formatDropdown = (data: any) => ({
+    id: Number(data.id),
+    name: data.name
+})
+
 export const dropdownController = {
+    async getDepartment(c: Context) { 
+        try {
+            const user = c.get("employee")
+            if (!user) return res(c, 'err', 401, "Unauthorized")
+            
+            const result = await dropdownModel.getDepartment()
+            return res(c, 'getDetail', 200, "Get department success", result)
+        } catch (error) {
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
+        }
+    },
+
+    async getPosition(c: Context) { 
+        try {
+            const user = c.get("employee")
+            if (!user) return res(c, 'err', 401, "Unauthorized")
+            
+            const departmentId = c.req.param("id")
+            const result = await dropdownModel.getPosition(departmentId)
+
+            return res(c, 'getDetail', 200, "Get position success", result)
+        } catch (error) {
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
+        }
+    },
+
+    async getRole(c: Context) { 
+        try {
+            const user = c.get("employee")
+            if (!user) return res(c, 'err', 401, "Unauthorized")
+            
+            const result = await dropdownModel.getRole()
+            return res(c, 'get', 200, "Get role success", result)
+        } catch (error) {
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
+        }
+    },
+
     async getCountry(c: Context) { 
         try {
             const user = c.get("employee")
             if (!user) return res(c, 'err', 401, "Unauthorized")
             
             const result = await dropdownModel.getCountry()
-            return res(c, 'get', 200, "Get country success", result)
+
+            return res(c, 'getDetail', 200, "Get country success", result.map(formatDropdown))
         } catch (error) {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
         }
@@ -23,7 +66,7 @@ export const dropdownController = {
             
             const countryId = Number(c.req.param("id"))
             const result = await dropdownModel.getProvince(countryId)
-            return res(c, 'get', 200, "Get province success", result)
+            return res(c, 'getDetail', 200, "Get province success", result.map(formatDropdown))
         } catch (error) {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
         }
@@ -36,7 +79,7 @@ export const dropdownController = {
             
             const provinceId = Number(c.req.param("id"))
             const result = await dropdownModel.getCity(provinceId)
-            return res(c, 'get', 200, "Get city success", result)
+            return res(c, 'getDetail', 200, "Get city success", result.map(formatDropdown))
         } catch (error) {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
         }
@@ -49,7 +92,7 @@ export const dropdownController = {
             
             const cityId = Number(c.req.param("id"))
             const result = await dropdownModel.getDistrict(cityId)
-            return res(c, 'get', 200, "Get district success", result)
+            return res(c, 'getDetail', 200, "Get district success", result.map(formatDropdown))
         } catch (error) {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
         }
@@ -62,7 +105,7 @@ export const dropdownController = {
             
             const districtId = Number(c.req.param("id"))
             const result = await dropdownModel.getVillage(districtId)
-            return res(c, 'get', 200, "Get village success", result)
+            return res(c, 'getDetail', 200, "Get village success", result.map(formatDropdown))
         } catch (error) {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
         }

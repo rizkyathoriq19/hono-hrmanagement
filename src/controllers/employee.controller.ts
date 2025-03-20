@@ -8,10 +8,28 @@ const registerValidationSchema = z.object({
     code: z.string().nonempty({message: "ID is required"}),
     name: z.string().nonempty({message: "Name is required"}),
     email: z.string().email({message: "Invalid email"}).nonempty({message: "Email is required"}),
-    phone: z.string().nonempty({message: "Phone is required"}),
+    phone: z.string(),
     department: z.string().nonempty({message: "Department is required"}),
     position: z.string().nonempty({message: "Position is required"}),
-    role: z.enum(["Manager", "Staff", "HR"], {message: "Invalid role"})
+    role: z.enum(["Manager", "Staff", "HR"], { message: "Invalid role" }),
+    hire_date: z.date({ message: "Invalid date" }),
+    identification_no: z.string().nonempty({message: "Identification number is required"}),
+    image: z.string(),
+    birth_date: z.date({ message: "Invalid date" }),
+    birth_place: z.string(),
+    gender: z.enum(["Male", "Female"]),
+    blood_type: z.enum(["A", "B", "AB", "O"]),
+    address: z.string().nonempty({message: "Address is required"}),
+    village: z.string().nonempty({ message: "Village is required" }),
+    district: z.string().nonempty({ message: "District is required" }),
+    city: z.string().nonempty({ message: "City is required" }),
+    province: z.string().nonempty({ message: "Province is required" }),
+    country: z.string().nonempty({ message: "Country is required" }),
+    zip_code: z.string().nonempty({ message: "Zip code is required" }),
+    religion: z.enum(["Islam", "Christian", "Catholic", "Hindu", "Buddha", "Confucian", "Other"], { message: "Invalid religion" }),
+    married_status: z.enum(["Single", "Married", "Divorced", "Widowed"], { message: "Invalid married status" }),
+    citizen_status: z.enum(["Citizen", "Permanent_Resident", "Temporary_Resident", "Foreigner"], { message: "Invalid citizen status" }),
+    manager: z.string(),
 })
 
 const formatEmployeesData = (employees: IEmployee) => ({
@@ -30,6 +48,10 @@ const formatEmployeesData = (employees: IEmployee) => ({
     role: {
         id: employees.role_id,
         name: employees.role_name,
+    },
+    manager: {
+        id: employees.manager_id,
+        name: employees.manager_name
     },
     hire_date: employees.hire_date,
     status: employees.status,
@@ -137,7 +159,7 @@ export const employeeController = {
             const roleId = roleMap[role];
 
             const result = await employeeModel.addEmployee(
-                code, name, email, phone, uuidDepartment[0]?.id, uuidPosition[0]?.id, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status
+                code, name, email, phone, uuidDepartment[0]?.id, uuidPosition[0]?.id, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, manager
             )
             
             if (!result) return res(c, 'err', 500, "Failed to add employee")
@@ -171,7 +193,7 @@ export const employeeController = {
             if (!user) return res(c, 'err', 401, "Unauthorized")
                 
             const body = await c.req.json<TUpdate>()
-            const { code, name, email, phone, department, position, role } = body
+            const { code, name, email, phone, department, position, role, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, manager} = body
 
             const userId = c.req.param("id")
             const getEmployeeId = await employeeModel.getEmployeeById(userId)
@@ -193,7 +215,7 @@ export const employeeController = {
             const roleId = roleMap[role]
 
             const result = await employeeModel.updateEmployee(
-                userId, code, name, email, phone, uuidDepartment[0]?.id, uuidPosition[0]?.id, roleId
+                userId, code, name, email, phone, uuidDepartment[0]?.id, uuidPosition[0]?.id, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, manager
             )
 
             return res(c, 'put', 200, "Update employee success")

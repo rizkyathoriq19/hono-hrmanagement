@@ -23,7 +23,24 @@ export const employeeSwagger = {
                                 phone: z.string(),
                                 department: z.string(),
                                 position: z.string(),
-                                role: z.string()
+                                role: z.string(),
+                                hire_date: z.date(),
+                                identification_no: z.string(),
+                                image: z.string(),
+                                birth_date: z.date(),
+                                birth_place: z.string(),
+                                gender: z.string(),
+                                blood_type: z.string(),
+                                address: z.string(),
+                                village: z.string(),
+                                district: z.string(),
+                                city: z.string(),
+                                province: z.string(),
+                                country: z.string(),
+                                zip_code: z.string(),
+                                religion: z.string(),
+                                married_status: z.string(),
+                                citizen_status: z.string(),
                             })
                         }
                     }
@@ -172,6 +189,29 @@ export const employeeSwagger = {
             path: '/employee/all',
             tags: ['Employee'],
             security: [{ Bearer: [] }],
+            parameters: [
+                {
+                    name: "page",
+                    in: "query",
+                    required: false,
+                    schema: { type: "number" },
+                    description: "Page number"
+                },
+                {
+                    name: "limit",
+                    in: "query",
+                    required: false,
+                    schema: { type: "number" },
+                    description: "Limit data per page"
+                },
+                {
+                    name: "search",
+                    in: "query",
+                    required: false,
+                    schema: { type: "string" },
+                    description: "Search by name or code"
+                }
+            ],
             responses: {
                 200: {
                     description: "Get data successful",
@@ -246,7 +286,7 @@ export const employeeSwagger = {
                 in: "path",
                 required: true,
                 schema: { type: "string", format: "uuid" },
-                description: "The employee ID (must match the logged-in user's ID unless the user has special permissions)."
+                description: "Employee ID"
             }],    
             request: {
                 body: {
@@ -260,7 +300,23 @@ export const employeeSwagger = {
                                 department: z.string(),
                                 position: z.string(),
                                 role: z.string(),
-                                status: z.string()
+                                hire_date: z.date(),
+                                identification_no: z.string(),
+                                image: z.string(),
+                                birth_date: z.date(),
+                                birth_place: z.string(),
+                                gender: z.string(),
+                                blood_type: z.string(),
+                                address: z.string(),
+                                village: z.string(),
+                                district: z.string(),
+                                city: z.string(),
+                                province: z.string(),
+                                country: z.string(),
+                                zip_code: z.string(),
+                                religion: z.string(),
+                                married_status: z.string(),
+                                citizen_status: z.string(),
                             })
                         }
                     }
@@ -357,7 +413,7 @@ export const employeeSwagger = {
                 in: "path",
                 required: true,
                 schema: { type: "string", format: "uuid" },
-                description: "The employee ID (must match the logged-in user's ID unless the user has special permissions)."
+                description: "Employee ID"
             }],              
             responses: {
                 200: {
@@ -450,7 +506,7 @@ export const employeeSwagger = {
                 in: "path",
                 required: true,
                 schema: { type: "string", format: "uuid" },
-                description: "The employee ID (must match the logged-in user's ID unless the user has special permissions)."
+                description: "Employee ID"
             }],    
             responses: {
                 200: {

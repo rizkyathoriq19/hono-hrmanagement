@@ -16,9 +16,9 @@ swagger.openAPIRegistry.registerComponent('securitySchemes', 'Bearer', {
 swagger.openAPIRegistry.registerPath(authSwagger.loginRoute())
 
 // Dropdown
-swagger.openAPIRegistry.registerPath(authSwagger.getDepartmentRoute())
-swagger.openAPIRegistry.registerPath(authSwagger.getPositionRoute())
-swagger.openAPIRegistry.registerPath(authSwagger.getRoleRoute())
+swagger.openAPIRegistry.registerPath(dropdownSwagger.getDepartmentRoute())
+swagger.openAPIRegistry.registerPath(dropdownSwagger.getPositionRoute())
+swagger.openAPIRegistry.registerPath(dropdownSwagger.getRoleRoute())
 swagger.openAPIRegistry.registerPath(dropdownSwagger.getCountryRoute())
 swagger.openAPIRegistry.registerPath(dropdownSwagger.getProvinceRoute())
 swagger.openAPIRegistry.registerPath(dropdownSwagger.getCityRoute())

@@ -13,9 +13,9 @@ const r = new Hono()
 r.post("/auth/login", authController.login)
 
 // Dropdown
-r.get("/dropdown/department", authMiddleware, authController.getDepartment)
-r.get("/dropdown/position/:id", authMiddleware, authController.getPosition)
-r.get("/dropdown/role", authMiddleware, authController.getRole)
+r.get("/dropdown/department", authMiddleware, dropdownController.getDepartment)
+r.get("/dropdown/position/:id", authMiddleware, dropdownController.getPosition)
+r.get("/dropdown/role", authMiddleware, dropdownController.getRole)
 r.get("/dropdown/country", authMiddleware, dropdownController.getCountry)
 r.get("/dropdown/province/:id", authMiddleware, dropdownController.getProvince)
 r.get("/dropdown/city/:id", authMiddleware, dropdownController.getCity)
