@@ -16,18 +16,6 @@ export const dropdownModel = {
         `
     },
 
-    async getLastEmployeeCode(year: string, month: string, department_id: string) { 
-        return await prisma.$queryRaw<{ code: string }[]>`
-            SELECT code
-            FROM employee
-            WHERE TO_CHAR(hire_date, 'YY') = ${year}
-            AND TO_CHAR(hire_date, 'MM') = ${month}
-            AND department_id = ${department_id}::uuid
-            ORDER BY code DESC
-            LIMIT 1
-        `
-    },
-
     async getRole() { 
         return await prisma.$queryRaw`
             SELECT r.id, r.name

@@ -158,6 +158,18 @@ export const employeeModel = {
             SET status = ${status}::"Status"
             WHERE id = ${userId}::uuid
         `
-    }
+    },
+
+    async getLastEmployeeCode(year: string, month: string, department_id: string) { 
+        return await prisma.$queryRaw<{ code: string }[]>`
+            SELECT code
+            FROM employee
+            WHERE TO_CHAR(hire_date, 'YY') = ${year}
+            AND TO_CHAR(hire_date, 'MM') = ${month}
+            AND department_id = ${department_id}::uuid
+            ORDER BY code DESC
+            LIMIT 1
+        `
+    },    
 
 }

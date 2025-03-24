@@ -1,7 +1,7 @@
 import type { Context } from "hono"
 import { z } from "zod"
 import { employeeModel } from "@/models/employee.model"
-import { generateEmployeeCode, parseDate } from "@/services/employee.service"
+import { employeeService } from "@/services/employee.service"
 import { res } from "@/utils/response"
 import { IEmployee, TRegister, TUpdate, TStatus } from "@/types/employee.type"
 
@@ -253,8 +253,8 @@ export const employeeController = {
             
             const { hire_date, department_id } = await c.req.json<{ hire_date: string, department_id: string }>()
 
-            const date = parseDate(hire_date)
-            const generateCode = await generateEmployeeCode(date, department_id)
+            const date = employeeService.parseDate(hire_date)
+            const generateCode = await employeeService.generateEmployeeCode(date, department_id)
 
             return res(c, 'getDetail', 200, "Generate employee code success", generateCode)
         } catch (error) {
