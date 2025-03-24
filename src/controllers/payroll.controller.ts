@@ -6,7 +6,7 @@ import { TAddPayroll, IPayroll } from "@/types/payroll.type"
 import xlsx from "xlsx"
 
 const formatPayroll = (payroll: IPayroll) => ({ 
-    id: Number(payroll.id),
+    id: payroll.id,
     employee: {
         id: payroll.employee_id,
         name: payroll.employee_name

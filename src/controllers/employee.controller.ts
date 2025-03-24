@@ -107,7 +107,7 @@ const formatEmployeeData = (employee: IEmployee) => ({
         name: employee.province_name,
     },
     country: {
-        id: Number(employee.country_id),
+        id: employee.country_id,
         name: employee.country_name,
     },
     zip_code: employee.zip_code,
@@ -140,7 +140,7 @@ export const employeeController = {
     },
 
     async addEmployee(c: Context) {
-        const body = await c.req.json<TRegister>()
+        const body = await c.req.formData() as unknown as TRegister
         const { code, name, email, phone, departmentId, positionId, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, managerId } = body
 
         try {
@@ -179,12 +179,12 @@ export const employeeController = {
     },
         
     async updateEmployee(c: Context) {
+        const body = await c.req.formData() as unknown as TUpdate
+        const { code, name, email, phone, departmentId, positionId, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, managerId } = body
+        
         try {
             const user = c.get("employee")
             if (!user) return res(c, 'err', 401, "Unauthorized")
-                
-            const body = await c.req.json<TUpdate>()
-            const { code, name, email, phone, departmentId, positionId, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, managerId} = body
 
             const userId = c.req.param("id")
             const getEmployeeId = await employeeModel.getEmployeeById(userId)

@@ -15,7 +15,7 @@ export const employeeSwagger = {
             request: {
                 body: {
                     content: {
-                        "application/json": {
+                        "multipart/form-data": {
                             schema: z.object({
                                 code: z.string(),
                                 name: z.string(),
@@ -291,7 +291,7 @@ export const employeeSwagger = {
             request: {
                 body: {
                     content: {
-                        "application/json": {
+                        "multipart/form-data": {
                             schema: z.object({
                                 code: z.string(),
                                 name: z.string(),
