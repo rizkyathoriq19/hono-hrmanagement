@@ -3,7 +3,7 @@ import { z } from "zod"
 import { employeeModel } from "@/models/employee.model"
 import { generateEmployeeCode, parseDate } from "@/services/employee.service"
 import { res } from "@/utils/response"
-import { IEmployee, roleMap, TRegister, TUpdate, TStatus } from "@/types/employee.type"
+import { IEmployee, TRegister, TUpdate, TStatus } from "@/types/employee.type"
 
 const registerValidationSchema = z.object({
     code: z.string().nonempty({message: "ID is required"}),
@@ -12,7 +12,7 @@ const registerValidationSchema = z.object({
     phone: z.string(),
     department: z.string().nonempty({message: "Department is required"}),
     position: z.string().nonempty({message: "Position is required"}),
-    role: z.enum(["Manager", "Staff", "HR"], { message: "Invalid role" }),
+    role: z.number({message: "Role is required"}),
     hire_date: z.date({ message: "Invalid date" }),
     identification_no: z.string().nonempty({message: "Identification number is required"}),
     image: z.string(),
@@ -141,7 +141,7 @@ export const employeeController = {
 
     async addEmployee(c: Context) {
         const body = await c.req.json<TRegister>()
-        const { code, name, email, phone, department, position, role, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, manager } = body
+        const { code, name, email, phone, departmentId, positionId, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, managerId } = body
 
         try {
             const user = c.get("employee")
@@ -149,18 +149,8 @@ export const employeeController = {
             
             await registerValidationSchema.parseAsync(body)
 
-            const [uuidDepartment, uuidPosition] = await Promise.all([
-                employeeModel.getDepartmentByName(department),
-                employeeModel.getPositionByName(position)
-            ])
-
-            if (!uuidDepartment.length) return res(c, 'err', 400, "Invalid department")
-            if (!uuidPosition.length) return res(c, 'err', 400, "Invalid position")
-
-            const roleId = roleMap[role]
-
             const result = await employeeModel.addEmployee(
-                code, name, email, phone, uuidDepartment[0].id, uuidPosition[0].id, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, manager
+                code, name, email, phone, departmentId, positionId, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, managerId
             )
             
             if (!result) return res(c, 'err', 500, "Failed to add employee")
@@ -194,7 +184,7 @@ export const employeeController = {
             if (!user) return res(c, 'err', 401, "Unauthorized")
                 
             const body = await c.req.json<TUpdate>()
-            const { code, name, email, phone, department, position, role, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, manager} = body
+            const { code, name, email, phone, departmentId, positionId, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, managerId} = body
 
             const userId = c.req.param("id")
             const getEmployeeId = await employeeModel.getEmployeeById(userId)
@@ -205,18 +195,8 @@ export const employeeController = {
                 return res(c, 'err', 403, "Forbidden")
             }
 
-            const [uuidDepartment, uuidPosition] = await Promise.all([
-                employeeModel.getDepartmentByName(department),
-                employeeModel.getPositionByName(position)
-            ])  
-
-            if (!uuidDepartment.length) return res(c, 'err', 400, "Invalid department")
-            if (!uuidPosition.length) return res(c, 'err', 400, "Invalid position")
-
-            const roleId = roleMap[role]
-
             const result = await employeeModel.updateEmployee(
-                userId, code, name, email, phone, uuidDepartment[0]?.id, uuidPosition[0]?.id, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, manager
+                userId, code, name, email, phone, departmentId, positionId, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, managerId
             )
 
             return res(c, 'put', 200, "Update employee success")

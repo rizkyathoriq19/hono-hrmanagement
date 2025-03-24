@@ -1,14 +1,12 @@
-type TRole = "Manager" | "Staff" | "HR"
-
 export type TRegister = {
     code: string
     name: string
     email: string
     phone: string
-    department: string
-    position: string
-    role: "Manager" | "Staff" | "HR"
-    manager: string
+    departmentId: string
+    positionId: string
+    roleId: number
+    managerId: string
     hire_date: Date
     identification_no: string
     image: string
@@ -33,12 +31,6 @@ export type TUpdate = TRegister
 export type TStatus = {
     status: "ACTIVE" | "INACTIVE"
 }
-
-export const roleMap: Record<TRole, number> = {
-    Manager: 1,
-    Staff: 2,
-    HR: 3
-};
 
 export interface IEmployee {
     id: string
