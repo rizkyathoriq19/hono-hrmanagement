@@ -1,6 +1,7 @@
 import type { Context } from "hono"
 import { z } from "zod"
 import { employeeModel } from "@/models/employee.model"
+import { generateEmployeeCode, parseDate } from "@/services/employee.service"
 import { res } from "@/utils/response"
 import { IEmployee, roleMap, TRegister, TUpdate, TStatus } from "@/types/employee.type"
 
@@ -147,19 +148,19 @@ export const employeeController = {
             if (!user) return res(c, 'err', 401, "Unauthorized")
             
             await registerValidationSchema.parseAsync(body)
-            
+
             const [uuidDepartment, uuidPosition] = await Promise.all([
                 employeeModel.getDepartmentByName(department),
                 employeeModel.getPositionByName(position)
-            ])  
+            ])
 
             if (!uuidDepartment.length) return res(c, 'err', 400, "Invalid department")
             if (!uuidPosition.length) return res(c, 'err', 400, "Invalid position")
 
-            const roleId = roleMap[role];
+            const roleId = roleMap[role]
 
             const result = await employeeModel.addEmployee(
-                code, name, email, phone, uuidDepartment[0]?.id, uuidPosition[0]?.id, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, manager
+                code, name, email, phone, uuidDepartment[0].id, uuidPosition[0].id, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, manager
             )
             
             if (!result) return res(c, 'err', 500, "Failed to add employee")
@@ -260,6 +261,22 @@ export const employeeController = {
 
             const message = status == 'ACTIVE' ? "Active employee success" : "Inactive employee success"
             return res(c, 'patch', 200, message)
+        } catch (error) {
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error") 
+        }
+    },
+
+    async generateEmployeeCode(c: Context) { 
+        try {
+            const user = c.get("employee")
+            if (!user) return res(c, 'err', 401, "Unauthorized")
+            
+            const { hire_date, department_id } = await c.req.json<{ hire_date: string, department_id: string }>()
+
+            const date = parseDate(hire_date)
+            const generateCode = await generateEmployeeCode(date, department_id)
+
+            return res(c, 'getDetail', 200, "Generate employee code success", generateCode)
         } catch (error) {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error") 
         }

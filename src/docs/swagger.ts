@@ -32,6 +32,7 @@ swagger.openAPIRegistry.registerPath(employeeSwagger.addEmployeeRoute())
 swagger.openAPIRegistry.registerPath(employeeSwagger.updateEmployeeRoute())
 swagger.openAPIRegistry.registerPath(employeeSwagger.statusEmployeeRoute())
 swagger.openAPIRegistry.registerPath(employeeSwagger.deleteEmployeeRoute())
+swagger.openAPIRegistry.registerPath(employeeSwagger.generateCodeRoute())
 
 // Attendance
 swagger.openAPIRegistry.registerPath(attendanceSwagger.getAttendancesRoute())

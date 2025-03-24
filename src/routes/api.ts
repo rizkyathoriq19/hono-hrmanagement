@@ -29,6 +29,7 @@ r.post("/employee/add", authMiddleware, roleMiddleware("create_employee"), emplo
 r.put("/employee/update/:id", authMiddleware, roleMiddleware("update_employee"), employeeController.updateEmployee)
 r.patch("/employee/status/:id", authMiddleware, roleMiddleware("update_employee"), employeeController.statusEmployee)
 r.delete("/employee/delete/:id", authMiddleware, roleMiddleware("delete_employee"), employeeController.deleteEmployee)
+r.post("/employee/generate-code", authMiddleware, roleMiddleware("create_employee"), employeeController.generateEmployeeCode)
 
 // Attendance
 r.get("/attendance/all", authMiddleware, roleMiddleware("view_attendance"), attendanceController.getAll)

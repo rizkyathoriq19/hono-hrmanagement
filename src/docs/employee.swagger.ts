@@ -571,5 +571,80 @@ export const employeeSwagger = {
                 }
             }
         })
-    }
+    },
+
+    /**
+     * 🔹 Route: GenerateCode
+     */
+    generateCodeRoute() {
+        return createRoute({
+            method: 'post',
+            path: '/employee/generate-code',
+            tags: ['Employee'],
+            security: [{ Bearer: [] }],
+            request: {
+                body: {
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                hire_date: z.date(),
+                                department_id: z.string().uuid()
+                            })
+                        }
+                    }
+                }
+            },
+            responses: {
+                200: {
+                    description: "Get data successful",
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                status: z.boolean(),
+                                code: z.number().default(200),
+                                message: z.string(),
+                                data: z.string()
+                            }),
+                        }
+                    }
+                },
+                401: {
+                    description: "Unauthorized",
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                status: z.boolean().default(false),
+                                code: z.number().default(401),
+                                message: z.string()
+                            })
+                        }
+                    }
+                },
+                404: {
+                    description: "Not found",
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                status: z.boolean().default(false),
+                                code: z.number().default(404),
+                                message: z.string()
+                            })
+                        }
+                    }
+                },        
+                500: {
+                    description: "Internal server error",
+                    content: {
+                        "application/json": {
+                            schema: z.object({
+                                status: z.boolean().default(false),
+                                code: z.number().default(500),
+                                message: z.string()
+                            })
+                        }
+                    }
+                }
+            }
+        })
+    },    
 }
