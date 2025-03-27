@@ -4,6 +4,8 @@ import { employeeModel } from "@/models/employee.model"
 import { employeeService } from "@/services/employee.service"
 import { res } from "@/utils/response"
 import { IEmployee, TRegister, TUpdate, TStatus } from "@/types/employee.type"
+import { writeFile, mkdir } from 'fs/promises'
+import path from 'path'
 
 const registerValidationSchema = z.object({
     code: z.string().nonempty({message: "ID is required"}),
@@ -119,6 +121,8 @@ const formatEmployeeData = (employee: IEmployee) => ({
     updated_at: employee.updated_at,
 });
 
+const uploadDir = path.join(process.cwd(), 'uploads')
+
 export const employeeController = {
     async getEmployees(c: Context) { 
         try {
@@ -140,19 +144,29 @@ export const employeeController = {
     },
 
     async addEmployee(c: Context) {
-        const body = await c.req.formData() as unknown as TRegister
-        const { code, name, email, phone, departmentId, positionId, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, managerId } = body
+        const formData = await c.req.formData()
+        const formImage = await c.req.parseBody()
+
+        const body = Object.fromEntries(formData) as unknown as TRegister
+        const { code, name, email, phone, department, position, role, hire_date, identification_no, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status } = body
+        const file = formImage['image'] as File
 
         try {
             const user = c.get("employee")
             if (!user) return res(c, 'err', 401, "Unauthorized")
             
-            await registerValidationSchema.parseAsync(body)
+            // await registerValidationSchema.parseAsync(body)
+            await mkdir(uploadDir, { recursive: true })
+            const fileName = `${Date.now()}-${file.name}`
+            const filePath = path.join(uploadDir, fileName)
+
+            await writeFile(filePath, Buffer.from(await file.arrayBuffer()))
+            const image = `/uploads/${fileName}`
 
             const result = await employeeModel.addEmployee(
-                code, name, email, phone, departmentId, positionId, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, managerId
+                code, name, email, phone, department, position, Number(role), hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, Number(village), Number(district), Number(city), Number(province), Number(country), zip_code, religion, married_status, citizen_status
             )
-            
+
             if (!result) return res(c, 'err', 500, "Failed to add employee")
             return res(c, 'post', 201, "Add employee success")
         } catch (error) {
@@ -179,9 +193,13 @@ export const employeeController = {
     },
         
     async updateEmployee(c: Context) {
-        const body = await c.req.formData() as unknown as TUpdate
-        const { code, name, email, phone, departmentId, positionId, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, managerId } = body
-        
+        const formData = await c.req.formData()
+        const formImage = await c.req.parseBody()
+
+        const body = Object.fromEntries(formData) as unknown as TRegister
+        const { code, name, email, phone, department, position, role, hire_date, identification_no, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status } = body
+        const file = formImage['image'] as File
+
         try {
             const user = c.get("employee")
             if (!user) return res(c, 'err', 401, "Unauthorized")
@@ -195,8 +213,15 @@ export const employeeController = {
                 return res(c, 'err', 403, "Forbidden")
             }
 
+            await mkdir(uploadDir, { recursive: true })
+            const fileName = `${Date.now()}-${file.name}`
+            const filePath = path.join(uploadDir, fileName)
+
+            await writeFile(filePath, Buffer.from(await file.arrayBuffer()))
+            const image = `/uploads/${fileName}`
+
             const result = await employeeModel.updateEmployee(
-                userId, code, name, email, phone, departmentId, positionId, roleId, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status, managerId
+                userId, code, name, email, phone, department, position, Number(role), hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, Number(village), Number(district), Number(city), Number(province), Number(country), zip_code, religion, married_status, citizen_status
             )
 
             return res(c, 'put', 200, "Update employee success")

@@ -34,7 +34,7 @@ export const employeeModel = {
                     WHERE (e.name ILIKE ${searchQuery}
                     OR e.code ILIKE ${searchQuery})
                     AND e.deleted_at IS NULL
-                    ORDER BY e.hire_date ASC
+                    ORDER BY e.updated_at DESC
                     LIMIT ${p_limit} OFFSET ${(c_page - 1) * p_limit}
                 `
             case "Manager":
@@ -117,11 +117,11 @@ export const employeeModel = {
         `
     },
 
-    async addEmployee(code: string, name: string, email: string, phone: string, departmentId: string, positionId: string, roleId: number, hire_date: Date, identificationNumber: string, image: string, birthDate: Date, birthPlace: string, gender: string, bloodType: string, address: string, villageId: number, districtId: number, cityId: number, provinceId: number, countryId: number, zipCode: string, religion: string, marriedStatus: string, citizenStatus: string, manager: string) {
+    async addEmployee(code: string, name: string, email: string, phone: string, departmentId: string, positionId: string, roleId: number, hire_date: Date, identificationNumber: string, image: string, birthDate: Date, birthPlace: string, gender: string, bloodType: string, address: string, villageId: number, districtId: number, cityId: number, provinceId: number, countryId: number, zipCode: string, religion: string, marriedStatus: string, citizenStatus: string) {
         return await prisma.$executeRaw`
             WITH inserted_employee AS (
-                INSERT INTO employee (code, name, email, phone, department_id, position_id, role_id, hire_date, status, identification_no, image, birth_date, birth_place, gender, blood_type, address, village_id, district_id, city_id, province_id, country_id, zip_code, religion, married_status, citizen_status, is_active)
-                VALUES (${code}, ${name}, ${email}, ${phone}, ${departmentId}::uuid, ${positionId}::uuid, ${roleId}, ${hire_date}::date, ${'ACTIVE'}::"Status", ${identificationNumber}, ${image}, ${birthDate}::date, ${birthPlace}, ${gender}::"Gender", ${bloodType}::"BloodType", ${address}, ${villageId}, ${districtId}, ${cityId}, ${provinceId}, ${countryId}, ${zipCode}, ${religion}::"Religion", ${marriedStatus}::"MarriedStatus", ${citizenStatus}::"CitizenStatus", ${true}, ${manager}::uuid)
+                INSERT INTO employee (code, name, email, phone, department_id, position_id, role_id, hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, village_id, district_id, city_id, province_id, country_id, zip_code, religion, married_status, citizen_status, is_active, status)
+                VALUES (${code}, ${name}, ${email}, ${phone}, ${departmentId}::uuid, ${positionId}::uuid, ${roleId}, ${hire_date}::date, ${identificationNumber}, ${image}, ${birthDate}::date, ${birthPlace}, ${gender}::"Gender", ${bloodType}::"BloodType", ${address}, ${villageId}, ${districtId}, ${cityId}, ${provinceId}, ${countryId}, ${zipCode}, ${religion}::"Religion", ${marriedStatus}::"MarriedStatus", ${citizenStatus}::"CitizenStatus", ${true}, ${"ACTIVE"}::"Status")
                 RETURNING id, code, email
             )
             INSERT INTO user_credentials (email, password, employee_id, code)
@@ -130,10 +130,10 @@ export const employeeModel = {
         `
     },
 
-    async updateEmployee(userId: string, code: string, name: string, email: string, phone: string, departmentId: string, positionId: string, roleId: number, hire_date: Date, identificationNumber: string, image: string, birthDate: Date, birthPlace: string, gender: string, bloodType: string, address: string, villageId: number, districtId: number, cityId: number, provinceId: number, countryId: number, zipCode: string, religion: string, marriedStatus: string, citizenStatus: string, manager: string) {
+    async updateEmployee(userId: string, code: string, name: string, email: string, phone: string, departmentId: string, positionId: string, roleId: number, hire_date: Date, identificationNumber: string, image: string, birthDate: Date, birthPlace: string, gender: string, bloodType: string, address: string, villageId: number, districtId: number, cityId: number, provinceId: number, countryId: number, zipCode: string, religion: string, marriedStatus: string, citizenStatus: string) {
         return await prisma.$executeRaw`
             UPDATE employee 
-            SET code = ${code}, name = ${name}, email = ${email}, phone = ${phone}, department_id = ${departmentId}::uuid, position_id = ${positionId}::uuid, role_id = ${roleId}, hire_date = ${hire_date}::date, identification_no = ${identificationNumber}, image = ${image}, birth_date = ${birthDate}::date, birth_place = ${birthPlace}, gender = ${gender}::"Gender", blood_type = ${bloodType}::"BloodType", address = ${address}, village_id = ${villageId}, district_id = ${districtId}, city_id = ${cityId}, province_id = ${provinceId}, country_id = ${countryId}, zip_code = ${zipCode}, religion = ${religion}::"Religion", married_status = ${marriedStatus}::"MarriedStatus", citizen_status = ${citizenStatus}::"CitizenStatus", manager_id = ${manager}::uuid
+            SET code = ${code}, name = ${name}, email = ${email}, phone = ${phone}, department_id = ${departmentId}::uuid, position_id = ${positionId}::uuid, role_id = ${roleId}, hire_date = ${hire_date}::date, identification_no = ${identificationNumber}, image = ${image}, birth_date = ${birthDate}::date, birth_place = ${birthPlace}, gender = ${gender}::"Gender", blood_type = ${bloodType}::"BloodType", address = ${address}, village_id = ${villageId}, district_id = ${districtId}, city_id = ${cityId}, province_id = ${provinceId}, country_id = ${countryId}, zip_code = ${zipCode}, religion = ${religion}::"Religion", married_status = ${marriedStatus}::"MarriedStatus", citizen_status = ${citizenStatus}::"CitizenStatus"
             WHERE id = ${userId}::uuid
         `
     },

@@ -3,10 +3,10 @@ export type TRegister = {
     name: string
     email: string
     phone: string
-    departmentId: string
-    positionId: string
-    roleId: number
-    managerId: string
+    department: string
+    position: string
+    role: number
+    manager: string
     hire_date: Date
     identification_no: string
     image: string
