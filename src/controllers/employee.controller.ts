@@ -7,32 +7,32 @@ import { IEmployee, TRegister, TUpdate, TStatus } from "@/types/employee.type"
 import cloudinary from "@/utils/cloudinary"
 
 const registerValidationSchema = z.object({
-    code: z.string().nonempty({message: "ID is required"}),
-    name: z.string().nonempty({message: "Name is required"}),
-    email: z.string().email({message: "Invalid email"}).nonempty({message: "Email is required"}),
+    code: z.string().nonempty({ message: "ID is required" }),
+    name: z.string().nonempty({ message: "Name is required" }),
+    email: z.string().email({ message: "Invalid email" }).nonempty({ message: "Email is required" }),
     phone: z.string(),
-    department: z.string().nonempty({message: "Department is required"}),
-    position: z.string().nonempty({message: "Position is required"}),
-    role: z.number({message: "Role is required"}),
-    hire_date: z.date({ message: "Invalid date" }),
-    identification_no: z.string().nonempty({message: "Identification number is required"}),
-    image: z.string(),
-    birth_date: z.date({ message: "Invalid date" }),
+    department: z.string().nonempty({ message: "Department is required" }),
+    position: z.string().nonempty({ message: "Position is required" }),
+    role: z.number({ message: "Role is required" }),
+    hire_date: z.string().nonempty({ message: "Hire date is required" }), 
+    identification_no: z.string().nonempty({ message: "Identification number is required" }),
+    image: z.instanceof(File, { message: "Image must be a file" }), 
+    birth_date: z.string().nonempty({ message: "Birth date is required" }), 
     birth_place: z.string(),
-    gender: z.enum(["Male", "Female"]),
-    blood_type: z.enum(["A", "B", "AB", "O"]),
-    address: z.string().nonempty({message: "Address is required"}),
-    village: z.string().nonempty({ message: "Village is required" }),
-    district: z.string().nonempty({ message: "District is required" }),
-    city: z.string().nonempty({ message: "City is required" }),
-    province: z.string().nonempty({ message: "Province is required" }),
-    country: z.string().nonempty({ message: "Country is required" }),
+    gender: z.coerce.number().int().min(1, { message: "Invalid gender" }),
+    blood_type: z.coerce.number().int().optional(),
+    address: z.string().nonempty({ message: "Address is required" }),
+    village: z.coerce.number().int().min(1, { message: "Village must be a number" }),
+    district: z.coerce.number().int().min(1, { message: "District must be a number" }),
+    city: z.coerce.number().int().min(1, { message: "City must be a number" }),
+    province: z.coerce.number().int().min(1, { message: "Province must be a number" }),
+    country: z.coerce.number().int().min(1, { message: "Country must be a number" }),
     zip_code: z.string().nonempty({ message: "Zip code is required" }),
-    religion: z.enum(["Islam", "Christian", "Catholic", "Hindu", "Buddha", "Confucian", "Other"], { message: "Invalid religion" }),
-    married_status: z.enum(["Single", "Married", "Divorced", "Widowed"], { message: "Invalid married status" }),
-    citizen_status: z.enum(["Citizen", "Permanent_Resident", "Temporary_Resident", "Foreigner"], { message: "Invalid citizen status" }),
+    religion: z.coerce.number().int().min(1, { message: "Religion must be a number" }),
+    married_status: z.coerce.number().int().min(1, { message: "Married status must be a number" }),
+    citizen_status: z.coerce.number().int().min(1, { message: "Citizen status must be a number" }),
     manager: z.string(),
-})
+});
 
 const formatEmployeesData = (employees: IEmployee) => ({
     id: employees.id,
@@ -168,7 +168,7 @@ export const employeeController = {
             const image: string = uploadResult.secure_url
 
             const result = await employeeModel.addEmployee(
-                code, name, email, phone, department, position, Number(role), hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, Number(village), Number(district), Number(city), Number(province), Number(country), zip_code, religion, married_status, citizen_status
+                code, name, email, phone, department, position, Number(role), hire_date, identification_no, image, birth_date, birth_place, Number(gender), Number(blood_type), address, Number(village), Number(district), Number(city), Number(province), Number(country), zip_code, Number(religion), Number(married_status), Number(citizen_status)
             )
 
             if (!result) return res(c, 'err', 500, "Failed to add employee")
@@ -244,7 +244,7 @@ export const employeeController = {
             }
 
             const result = await employeeModel.updateEmployee(
-                userId, code, name, email, phone, department, position, Number(role), hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, Number(village), Number(district), Number(city), Number(province), Number(country), zip_code, religion, married_status, citizen_status
+                userId, code, name, email, phone, department, position, Number(role), hire_date, identification_no, image, birth_date, birth_place, Number(gender),Number(blood_type), address, Number(village), Number(district), Number(city), Number(province), Number(country), zip_code, Number(religion), Number(married_status), Number(citizen_status)
             )
 
             return res(c, 'put', 200, "Update employee success")
