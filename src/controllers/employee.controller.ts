@@ -3,7 +3,7 @@ import { z } from "zod"
 import { employeeModel } from "@/models/employee.model"
 import { employeeService } from "@/services/employee.service"
 import { res } from "@/utils/response"
-import { IEmployee, TRegister, TUpdate, TStatus } from "@/types/employee.type"
+import { TRegister, TUpdate, TStatus } from "@/types/employee.type"
 import cloudinary from "@/utils/cloudinary"
 
 const registerValidationSchema = z.object({
@@ -34,92 +34,6 @@ const registerValidationSchema = z.object({
     manager: z.string(),
 });
 
-const formatEmployeesData = (employees: IEmployee) => ({
-    id: employees.id,
-    name: employees.name,
-    email: employees.email,
-    phone: employees.phone,
-    department: {
-        id: employees.department_id,
-        name: employees.department_name,
-    },
-    position: {
-        id: employees.position_id,
-        name: employees.position_name,
-    },
-    role: {
-        id: employees.role_id,
-        name: employees.role_name,
-    },
-    manager: {
-        id: employees.manager_id,
-        name: employees.manager_name
-    },
-    hire_date: employees.hire_date,
-    status: employees.status,
-    code: employees.code,
-})
-
-const formatEmployeeData = (employee: IEmployee) => ({
-    id: employee.id,
-    name: employee.name,
-    email: employee.email,
-    phone: employee.phone,
-    department: {
-        id: employee.department_id,
-        name: employee.department_name,
-    },
-    position: {
-        id: employee.position_id,
-        name: employee.position_name,
-    },
-    role: {
-        id: employee.role_id,
-        name: employee.role_name,
-    },
-    manager: {
-        id: employee.manager_id,
-        name: employee.manager_name
-    },
-    hire_date: employee.hire_date,
-    status: employee.status,
-    code: employee.code,
-    identification_no: employee.identification_no,
-    image: employee.image,
-    birth_date: employee.birth_date,
-    birth_place: employee.birth_place,
-    gender: employee.gender,
-    blood_type: employee.blood_type,
-    address: employee.address,
-    village: {
-        id: Number(employee.village_id),
-        name: employee.village_name,
-    },
-    district: {
-        id: Number(employee.district_id),   
-        name: employee.district_name,
-    },
-    city: {
-        id: Number(employee.city_id),
-        name: employee.city_name,
-    },
-    province: {
-        id: Number(employee.province_id),
-        name: employee.province_name,
-    },
-    country: {
-        id: employee.country_id,
-        name: employee.country_name,
-    },
-    zip_code: employee.zip_code,
-    religion: employee.religion,
-    married_status: employee.married_status,
-    citizen_status: employee.citizen_status,
-    is_active: employee.is_active,
-    created_at: employee.created_at,
-    updated_at: employee.updated_at,
-});
-
 export const employeeController = {
     async getEmployees(c: Context) { 
         try {
@@ -129,12 +43,16 @@ export const employeeController = {
             const c_page = Number(c.req.query("page")) || 1
             const p_limit = Number(c.req.query("limit")) || 10
             const search = c.req.query("search")
-            const t_items = await employeeModel.totalEmployee()
-            const t_page = Math.ceil(t_items[0].total / p_limit)
-            
-            const result = await employeeModel.getEmployees(user.role, user.id, c_page, p_limit, search)
+            const fDepartment = c.req.query("department")
+            const fPosition = c.req.query("position")
+            const fRole = Number(c.req.query("role"))
 
-            return res(c, 'get', 200, "Get all employee success", result.map(formatEmployeesData), c_page, t_page, t_items[0].total)
+            const t_items = await employeeModel.totalFilteredEmployees(user.role, user.id, search, fDepartment, fPosition, fRole)
+            const t_page = Math.ceil(t_items[0].total / p_limit)
+
+            const result = await employeeModel.getEmployees(user.role, user.id, c_page, p_limit, search, fDepartment, fPosition, fRole)
+
+            return res(c, 'get', 200, "Get all employee success", result.map(employeeService.formatEmployeesData), c_page, t_page, t_items[0].total)
         } catch (error) {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")       
         }
@@ -190,7 +108,7 @@ export const employeeController = {
 
             const result = await employeeModel.getEmployeeById(userId)
             
-            return res(c, 'getDetail', 200, "Get employee success", result.map(formatEmployeeData)[0])           
+            return res(c, 'getDetail', 200, "Get employee success", result.map(employeeService.formatEmployeeData)[0])           
         } catch (error) {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")  
         }

@@ -33,7 +33,6 @@ r.post("/position/add", authMiddleware, positionController.add)
 r.put("/position/update/:id", authMiddleware, positionController.update)
 r.delete("/position/delete/:id", authMiddleware, positionController.delete)
 
-
 // Country
 r.get("/country/all", authMiddleware, countryController.getAll)
 r.get("/country/:id", authMiddleware, countryController.getById)
@@ -78,6 +77,11 @@ r.get("/dropdown/province/:id", authMiddleware, dropdownController.getProvince)
 r.get("/dropdown/city/:id", authMiddleware, dropdownController.getCity)
 r.get("/dropdown/district/:id", authMiddleware, dropdownController.getDistrict)
 r.get("/dropdown/village/:id", authMiddleware, dropdownController.getVillage)
+r.get("/dropdown/gender", authMiddleware, dropdownController.getGender)
+r.get("/dropdown/blood-type", authMiddleware, dropdownController.getBloodType)
+r.get("/dropdown/religion", authMiddleware, dropdownController.getReligion)
+r.get("/dropdown/married-status", authMiddleware, dropdownController.getMarriedStatus)
+r.get("/dropdown/citizen-status", authMiddleware, dropdownController.getCitizenStatus)
 
 // Employee
 r.get("/employee/all", authMiddleware, roleMiddleware("view_employee"), employeeController.getEmployees)

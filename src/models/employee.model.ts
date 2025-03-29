@@ -2,8 +2,12 @@ import { prisma } from "@/lib/encryption"
 import { IEmployee } from "@/types/employee.type"
 
 export const employeeModel = {
-    async getEmployees(role: string, userId: string, c_page: number, p_limit: number, search: string = '') {
+    async getEmployees(role: string, userId: string, c_page: number, p_limit: number, search: string = '', fDepartment?: string, fPosition?: string, fRole?: number) {
         const searchQuery = `%${search}%`
+        const dQuery = fDepartment ? `%${fDepartment}%` : null
+        const pQuery = fPosition ? `%${fPosition}%` : null
+        const rQuery = fRole && fRole > 0 ? fRole : null
+
         switch (role) {
             case "HR":
                 return await prisma.$queryRaw<IEmployee[]>`
@@ -13,13 +17,13 @@ export const employeeModel = {
                         r.id as role_id, r.name as role_name, 
                         e.manager_id, m.name as manager_name,
                         e.hire_date, e.status, e.code, e.identification_no, e.image,
-                        e.birth_date, e.birth_place, e.gender, e.blood_type, e.address,
+                        e.birth_date, e.birth_place, e.gender_id, e.blood_type_id, e.address,
                         vil.id as village_id, vil.name as village_name,
                         dis.id as district_id, dis.name as district_name,
                         city.id as city_id, city.name as city_name,
                         prov.id as province_id, prov.name as province_name,
                         cnt.id as country_id, cnt.name as country_name,
-                        e.zip_code, e.religion, e.married_status, e.citizen_status,
+                        e.zip_code, e.religion_id, e.married_status_id, e.citizen_status_id,
                         e.created_at, e.updated_at
                     FROM employee e
                     JOIN department d ON e.department_id = d.id
@@ -31,8 +35,12 @@ export const employeeModel = {
                     JOIN province prov ON e.province_id = prov.id
                     JOIN country cnt ON e.country_id = cnt.id
                     LEFT JOIN employee m ON e.manager_id = m.id
-                    WHERE (e.name ILIKE ${searchQuery}
-                    OR e.code ILIKE ${searchQuery})
+                    WHERE (
+                        (e.name ILIKE ${searchQuery} OR e.code ILIKE ${searchQuery})
+                        AND (d.id::TEXT ILIKE COALESCE(${dQuery}::TEXT, d.id::TEXT))
+                        AND (p.id::TEXT ILIKE COALESCE(${pQuery}::TEXT, p.id::TEXT)) 
+                        AND (r.id = COALESCE(${rQuery}::INTEGER, r.id))
+                    )
                     AND e.deleted_at IS NULL
                     ORDER BY e.updated_at DESC
                     LIMIT ${p_limit} OFFSET ${(c_page - 1) * p_limit}
@@ -45,13 +53,13 @@ export const employeeModel = {
                         r.id as role_id, r.name as role_name, 
                         e.manager_id, m.name as manager_name,
                         e.hire_date, e.status, e.code, e.identification_no, e.image,
-                        e.birth_date, e.birth_place, e.gender, e.blood_type, e.address,
+                        e.birth_date, e.birth_place, e.gender_id, e.blood_type_id, e.address,
                         vil.id as village_id, vil.name as village_name,
                         dis.id as district_id, dis.name as district_name,
                         city.id as city_id, city.name as city_name,
                         prov.id as province_id, prov.name as province_name,
                         cnt.id as country_id, cnt.name as country_name,
-                        e.zip_code, e.religion, e.married_status, e.citizen_status,
+                        e.zip_code, e.religion_id, e.married_status_id, e.citizen_status_id,
                         e.created_at, e.updated_at
                     FROM employee e
                     JOIN department d ON e.department_id = d.id
@@ -63,11 +71,14 @@ export const employeeModel = {
                     JOIN province prov ON e.province_id = prov.id
                     JOIN country cnt ON e.country_id = cnt.id
                     LEFT JOIN employee m ON e.manager_id = m.id
-                    WHERE ((e.name ILIKE ${searchQuery}
-                    OR e.code ILIKE ${searchQuery})
-                    AND e.department_id = (SELECT department_id FROM employee WHERE id = ${userId}::uuid))
+                    WHERE (
+                        (e.name ILIKE ${searchQuery} OR e.code ILIKE ${searchQuery})
+                        AND (p.id::TEXT ILIKE COALESCE(${pQuery}::TEXT, p.id::TEXT)) 
+                        AND (r.id = COALESCE(${rQuery}::INTEGER, r.id))
+                    )
+                    AND e.department_id = (SELECT department_id FROM employee WHERE id = ${userId}::uuid)
                     AND e.deleted_at IS NULL                
-                    ORDER BY e.hire_date ASC
+                    ORDER BY e.updated_at DESC
                     LIMIT ${p_limit} OFFSET ${(c_page - 1) * p_limit}                    
                 `
             default:
@@ -83,23 +94,32 @@ export const employeeModel = {
                 r.id as role_id, r.name as role_name, 
                 e.manager_id, m.name as manager_name,
                 e.hire_date, e.status, e.code, e.identification_no, e.image,
-                e.birth_date, e.birth_place, e.gender, e.blood_type, e.address,
+                e.birth_date, e.birth_place, 
+                gen.id as gender_id, gen.name as gender_name, 
+                bt.id as blood_type_id, bt.name as blood_type_name, e.address,
                 vil.id as village_id, vil.name as village_name,
                 dis.id as district_id, dis.name as district_name,
                 city.id as city_id, city.name as city_name,
                 prov.id as province_id, prov.name as province_name,
                 cnt.id as country_id, cnt.name as country_name,
-                e.zip_code, e.religion, e.married_status, e.citizen_status,
+                e.zip_code, reli.id as religion_id, reli.name as religion_name, 
+                ms.id as married_status_id, ms.name as married_status_name, 
+                cs.id as citizen_status_id, cs.name as citizen_status_name,
                 e.created_at, e.updated_at
             FROM employee e
             JOIN department d ON e.department_id = d.id
             JOIN position p ON e.position_id = p.id
             JOIN role r ON e.role_id = r.id
+            JOIN gender gen ON e.gender_id = gen.id
+            JOIN blood_type bt ON e.blood_type_id = bt.id
             JOIN village vil ON e.village_id = vil.id
             JOIN district dis ON e.district_id = dis.id
             JOIN city city ON e.city_id = city.id
             JOIN province prov ON e.province_id = prov.id
             JOIN country cnt ON e.country_id = cnt.id
+            JOIN religion reli ON e.religion_id = reli.id
+            JOIN married_status ms ON e.married_status_id = ms.id
+            JOIN citizen_status cs ON e.citizen_status_id = cs.id
             LEFT JOIN employee m ON e.manager_id = m.id
             WHERE e.id = ${userId}::uuid        
         `
@@ -133,7 +153,7 @@ export const employeeModel = {
     async updateEmployee(userId: string, code: string, name: string, email: string, phone: string, departmentId: string, positionId: string, roleId: number, hire_date: Date, identificationNumber: string, image: string | null, birthDate: Date, birthPlace: string, gender: number, bloodType: number, address: string, villageId: number, districtId: number, cityId: number, provinceId: number, countryId: number, zipCode: string, religion: number, marriedStatus: number, citizenStatus: number) {
         return await prisma.$executeRaw`
             UPDATE employee 
-            SET code = ${code}, name = ${name}, email = ${email}, phone = ${phone}, department_id = ${departmentId}::uuid, position_id = ${positionId}::uuid, role_id = ${roleId}, hire_date = ${hire_date}::date, identification_no = ${identificationNumber}, image = ${image}, birth_date = ${birthDate}::date, birth_place = ${birthPlace}, gender_id = ${gender}, blood_type_id = ${bloodType}, address = ${address}, village_id = ${villageId}, district_id = ${districtId}, city_id = ${cityId}, province_id = ${provinceId}, country_id = ${countryId}, zip_code = ${zipCode}, religion_id = ${religion}:, married_status_id = ${marriedStatus}, citizen_status_id = ${citizenStatus}
+            SET code = ${code}, name = ${name}, email = ${email}, phone = ${phone}, department_id = ${departmentId}::uuid, position_id = ${positionId}::uuid, role_id = ${roleId}, hire_date = ${hire_date}::date, identification_no = ${identificationNumber}, image = ${image}, birth_date = ${birthDate}::date, birth_place = ${birthPlace}, gender_id = ${gender}, blood_type_id = ${bloodType}, address = ${address}, village_id = ${villageId}, district_id = ${districtId}, city_id = ${cityId}, province_id = ${provinceId}, country_id = ${countryId}, zip_code = ${zipCode}, religion_id = ${religion}, married_status_id = ${marriedStatus}, citizen_status_id = ${citizenStatus}
             WHERE id = ${userId}::uuid
         `
     },
@@ -150,6 +170,48 @@ export const employeeModel = {
         }[]>`
             SELECT COUNT(*)::int as total FROM employee
         `
+    },
+
+    async totalFilteredEmployees(role: string, userId: string, search: string = '', fDepartment?: string, fPosition?: string, fRole?: number) {
+        const searchQuery = `%${search}%`
+        const dQuery = fDepartment ? `%${fDepartment}%` : null
+        const pQuery = fPosition ? `%${fPosition}%` : null
+        const rQuery = fRole && fRole > 0 ? fRole : null
+
+        switch (role) {
+            case "HR":
+                return await prisma.$queryRaw<{ total: number }[]>`
+                    SELECT COUNT(*)::int as total
+                    FROM employee e
+                    JOIN department d ON e.department_id = d.id
+                    JOIN position p ON e.position_id = p.id
+                    JOIN role r ON e.role_id = r.id
+                    WHERE (
+                        (e.name ILIKE ${searchQuery} OR e.code ILIKE ${searchQuery})
+                        AND (d.id::TEXT ILIKE COALESCE(${dQuery}::TEXT, d.id::TEXT))
+                        AND (p.id::TEXT ILIKE COALESCE(${pQuery}::TEXT, p.id::TEXT)) 
+                        AND (r.id = COALESCE(${rQuery}::INTEGER, r.id))
+                    )
+                    AND e.deleted_at IS NULL
+                `
+            case "Manager":
+                return await prisma.$queryRaw<{ total: number }[]>`
+                    SELECT COUNT(*)::int as total
+                    FROM employee e
+                    JOIN department d ON e.department_id = d.id
+                    JOIN position p ON e.position_id = p.id
+                    JOIN role r ON e.role_id = r.id
+                    WHERE (
+                        (e.name ILIKE ${searchQuery} OR e.code ILIKE ${searchQuery})
+                        AND (p.id::TEXT ILIKE COALESCE(${pQuery}::TEXT, p.id::TEXT)) 
+                        AND (r.id = COALESCE(${rQuery}::INTEGER, r.id))
+                    )
+                    AND e.department_id = (SELECT department_id FROM employee WHERE id = ${userId}::uuid)
+                    AND e.deleted_at IS NULL   
+                `
+            default:
+                return [{ total: 0 }]
+        }
     },
 
     async inactiveEmployee(userId: string, status: string) { 

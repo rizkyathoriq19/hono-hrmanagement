@@ -52,8 +52,10 @@ export interface IEmployee {
     image: string | null
     birth_date: Date
     birth_place: string
-    gender: string
-    blood_type: string | null
+    gender_id: number
+    gender_name: string
+    blood_type_id: number | null
+    blood_type_name: string | null
     address: string
     village_id: number
     village_name: string
@@ -66,10 +68,12 @@ export interface IEmployee {
     country_id: number
     country_name: string
     zip_code: string
-    religion: string
-    married_status: string
-    citizen_status: string
-    is_active: boolean
+    religion_id: number
+    religion_name: string
+    married_status_id: number
+    married_status_name: string
+    citizen_status_id: number
+    citizen_status_name: string
     created_at: Date
     updated_at: Date
     deleted_at: Date | null
