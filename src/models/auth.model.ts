@@ -19,4 +19,22 @@ export const authModel = {
             WHERE e.id = (SELECT employee_id FROM user_credentials WHERE code = ${identifier} OR email = ${identifier})
         `
     },
+
+    async findRole(userId: string | number) { 
+        return await prisma.$queryRaw<{ id: number, name: string }[]>`
+            SELECT r.id, r.name
+            FROM role r
+            JOIN employee e ON r.id = e.role_id
+            WHERE e.id = ${userId}::uuid
+        `
+    },
+
+    async findPermission(roleId: number) { 
+        return await prisma.$queryRaw<{ name: string }[]>`
+            SELECT p.name
+            FROM permission p
+            JOIN role_permission rp ON p.id = rp.permission_id
+            WHERE rp.role_id = ${roleId}
+        `
+    },
 }
