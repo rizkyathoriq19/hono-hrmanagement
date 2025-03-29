@@ -9,7 +9,7 @@ export type TRegister = {
     manager: string
     hire_date: Date
     identification_no: string
-    image: string
+    image: string | null
     birth_date: Date
     birth_place: string
     gender: string

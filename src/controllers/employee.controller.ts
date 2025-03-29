@@ -4,8 +4,7 @@ import { employeeModel } from "@/models/employee.model"
 import { employeeService } from "@/services/employee.service"
 import { res } from "@/utils/response"
 import { IEmployee, TRegister, TUpdate, TStatus } from "@/types/employee.type"
-import { writeFile, mkdir } from 'fs/promises'
-import path from 'path'
+import cloudinary from "@/utils/cloudinary"
 
 const registerValidationSchema = z.object({
     code: z.string().nonempty({message: "ID is required"}),
@@ -121,8 +120,6 @@ const formatEmployeeData = (employee: IEmployee) => ({
     updated_at: employee.updated_at,
 });
 
-const uploadDir = path.join(process.cwd(), 'uploads')
-
 export const employeeController = {
     async getEmployees(c: Context) { 
         try {
@@ -156,12 +153,19 @@ export const employeeController = {
             if (!user) return res(c, 'err', 401, "Unauthorized")
             
             // await registerValidationSchema.parseAsync(body)
-            await mkdir(uploadDir, { recursive: true })
-            const fileName = `${Date.now()}-${file.name}`
-            const filePath = path.join(uploadDir, fileName)
+            
+            const buffer = Buffer.from(await file.arrayBuffer())
+            const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => { 
+                cloudinary.uploader.upload_stream({
+                    resource_type: "auto",
+                    folder: "employee"
+                }, (error, result) => { 
+                    if (error || !result) return reject(error)
+                    resolve(result)
+                }).end(buffer)
+            })
 
-            await writeFile(filePath, Buffer.from(await file.arrayBuffer()))
-            const image = `/uploads/${fileName}`
+            const image: string = uploadResult.secure_url
 
             const result = await employeeModel.addEmployee(
                 code, name, email, phone, department, position, Number(role), hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, Number(village), Number(district), Number(city), Number(province), Number(country), zip_code, religion, married_status, citizen_status
@@ -196,7 +200,7 @@ export const employeeController = {
         const formData = await c.req.formData()
         const formImage = await c.req.parseBody()
 
-        const body = Object.fromEntries(formData) as unknown as TRegister
+        const body = Object.fromEntries(formData) as unknown as TUpdate
         const { code, name, email, phone, department, position, role, hire_date, identification_no, birth_date, birth_place, gender, blood_type, address, village, district, city, province, country, zip_code, religion, married_status, citizen_status } = body
         const file = formImage['image'] as File
 
@@ -213,12 +217,31 @@ export const employeeController = {
                 return res(c, 'err', 403, "Forbidden")
             }
 
-            await mkdir(uploadDir, { recursive: true })
-            const fileName = `${Date.now()}-${file.name}`
-            const filePath = path.join(uploadDir, fileName)
+            const findUser = await employeeModel.getEmployeeById(userId)
+            let image = findUser[0].image
 
-            await writeFile(filePath, Buffer.from(await file.arrayBuffer()))
-            const image = `/uploads/${fileName}`
+            if (file) {
+                const buffer = Buffer.from(await file.arrayBuffer())
+
+                if (image) {
+                    const oldImagePublicId = image.split("/").pop()?.split(".")[0]
+                    if (oldImagePublicId) {
+                        await cloudinary.uploader.destroy(`employee/${oldImagePublicId}`)
+                    }
+                }
+
+                const uploadResult = await new Promise<{ secure_url: string }>((resolve, reject) => { 
+                    cloudinary.uploader.upload_stream({
+                        resource_type: "auto",
+                        folder: "employee"
+                    }, (error, result) => { 
+                        if (error || !result) return reject(error)
+                        resolve(result)
+                    }).end(buffer)
+                })
+
+                image = uploadResult.secure_url
+            }
 
             const result = await employeeModel.updateEmployee(
                 userId, code, name, email, phone, department, position, Number(role), hire_date, identification_no, image, birth_date, birth_place, gender, blood_type, address, Number(village), Number(district), Number(city), Number(province), Number(country), zip_code, religion, married_status, citizen_status
