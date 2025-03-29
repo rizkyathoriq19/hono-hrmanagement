@@ -1,24 +1,7 @@
--- CreateExtension
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "pg_uuidv7";
 
 -- CreateEnum
 CREATE TYPE "Status" AS ENUM ('ACTIVE', 'INACTIVE');
-
--- CreateEnum
-CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE');
-
--- CreateEnum
-CREATE TYPE "BloodType" AS ENUM ('A', 'B', 'AB', 'O');
-
--- CreateEnum
-CREATE TYPE "Religion" AS ENUM ('ISLAM', 'CHRISTIAN', 'CATHOLIC', 'HINDU', 'BUDDHIST', 'CONFUCIAN', 'OTHER');
-
--- CreateEnum
-CREATE TYPE "MarriedStatus" AS ENUM ('SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED');
-
--- CreateEnum
-CREATE TYPE "CitizenStatus" AS ENUM ('CITIZEN', 'PERMANENT_RESIDENT', 'TEMPORARY_RESIDENT', 'FOREIGNER');
 
 -- CreateEnum
 CREATE TYPE "AttendanceStatus" AS ENUM ('PRESENT', 'ABSENT', 'LATE');
@@ -41,34 +24,37 @@ CREATE TYPE "LoanStatus" AS ENUM ('ONGOING', 'PAID');
 -- CreateTable
 CREATE TABLE "employee" (
     "id" UUID NOT NULL DEFAULT uuid_generate_v7(),
-    "name" TEXT NOT NULL,
-    "email" TEXT NOT NULL,
-    "phone" TEXT,
+    "name" VARCHAR(255) NOT NULL,
+    "email" VARCHAR(255) NOT NULL,
+    "phone" VARCHAR(20),
     "department_id" UUID NOT NULL,
     "position_id" UUID NOT NULL,
     "role_id" INTEGER NOT NULL,
+    "manager_id" UUID,
     "hire_date" TIMESTAMP(3) NOT NULL,
     "status" "Status" NOT NULL,
-    "code" TEXT NOT NULL,
-    "identification_no" TEXT NOT NULL,
-    "image" TEXT,
+    "code" VARCHAR(20) NOT NULL,
+    "identification_no" VARCHAR(255) NOT NULL,
+    "image" VARCHAR(255),
     "birth_date" TIMESTAMP(3) NOT NULL,
-    "birth_place" TEXT NOT NULL,
-    "gender" "Gender" NOT NULL,
-    "blood_type" "BloodType",
-    "address" TEXT NOT NULL,
+    "birth_place" VARCHAR(255),
+    "gender_id" INTEGER NOT NULL,
+    "blood_type_id" INTEGER,
+    "address" VARCHAR(255) NOT NULL,
     "village_id" BIGINT NOT NULL,
     "district_id" BIGINT NOT NULL,
     "city_id" BIGINT NOT NULL,
     "province_id" BIGINT NOT NULL,
-    "country_id" BIGINT NOT NULL,
-    "zip_code" TEXT NOT NULL,
-    "religion" "Religion" NOT NULL,
-    "married_status" "MarriedStatus" NOT NULL,
-    "citizen_status" "CitizenStatus" NOT NULL,
-    "is_active" BOOLEAN NOT NULL,
+    "country_id" INTEGER NOT NULL,
+    "zip_code" VARCHAR(10) NOT NULL,
+    "religion_id" INTEGER NOT NULL,
+    "married_status_id" INTEGER NOT NULL,
+    "citizen_status_id" INTEGER NOT NULL,
+    "rfid_tag" UUID,
+    "qr_code" UUID,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "employee_pkey" PRIMARY KEY ("id")
 );
@@ -76,10 +62,13 @@ CREATE TABLE "employee" (
 -- CreateTable
 CREATE TABLE "user_credentials" (
     "id" UUID NOT NULL DEFAULT uuid_generate_v7(),
-    "email" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
+    "email" VARCHAR(255) NOT NULL,
+    "password" VARCHAR(255) NOT NULL,
     "employee_id" UUID NOT NULL,
-    "code" TEXT NOT NULL,
+    "code" VARCHAR(20) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "user_credentials_pkey" PRIMARY KEY ("id")
 );
@@ -87,7 +76,11 @@ CREATE TABLE "user_credentials" (
 -- CreateTable
 CREATE TABLE "department" (
     "id" UUID NOT NULL DEFAULT uuid_generate_v7(),
-    "name" TEXT NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "alt_name" VARCHAR(10),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "department_pkey" PRIMARY KEY ("id")
 );
@@ -95,8 +88,12 @@ CREATE TABLE "department" (
 -- CreateTable
 CREATE TABLE "position" (
     "id" UUID NOT NULL DEFAULT uuid_generate_v7(),
-    "name" TEXT NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "alt_name" VARCHAR(10),
     "department_id" UUID NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "position_pkey" PRIMARY KEY ("id")
 );
@@ -104,7 +101,10 @@ CREATE TABLE "position" (
 -- CreateTable
 CREATE TABLE "role" (
     "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "role_pkey" PRIMARY KEY ("id")
 );
@@ -114,6 +114,9 @@ CREATE TABLE "permission" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "permission_pkey" PRIMARY KEY ("id")
 );
@@ -123,6 +126,9 @@ CREATE TABLE "role_permission" (
     "id" SERIAL NOT NULL,
     "role_id" INTEGER NOT NULL,
     "permission_id" INTEGER NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "role_permission_pkey" PRIMARY KEY ("id")
 );
@@ -141,87 +147,114 @@ CREATE TABLE "attendance" (
     "work_duration" INTEGER,
     "work_status" "WorkStatus",
     "status" "AttendanceStatus" NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "attendance_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "payroll" (
-    "id" BIGSERIAL NOT NULL,
+    "id" SERIAL NOT NULL,
     "employee_id" UUID NOT NULL,
     "basic_salary" DECIMAL(10,2) NOT NULL,
     "overtime" DECIMAL(10,2) NOT NULL,
     "deductions" DECIMAL(10,2) NOT NULL,
     "net_salary" DECIMAL(10,2) NOT NULL,
+    "month" INTEGER NOT NULL,
+    "year" INTEGER NOT NULL,
     "payment_date" TIMESTAMP(3) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "payroll_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "leave" (
-    "id" BIGSERIAL NOT NULL,
+    "id" SERIAL NOT NULL,
     "employee_id" UUID NOT NULL,
-    "leave_type" TEXT,
+    "leave_type" VARCHAR(255),
     "start_date" TIMESTAMP(3) NOT NULL,
     "end_date" TIMESTAMP(3) NOT NULL,
     "status" "LeaveStatus" NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "leave_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "reimbursement" (
-    "id" BIGSERIAL NOT NULL,
+    "id" SERIAL NOT NULL,
     "employee_id" UUID NOT NULL,
     "amount" DECIMAL(10,2) NOT NULL,
-    "category" TEXT,
+    "category" VARCHAR(255),
+    "description" TEXT,
     "submission_date" TIMESTAMP(3) NOT NULL,
     "status" "ReimbursementStatus" NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "reimbursement_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "training" (
-    "id" BIGSERIAL NOT NULL,
-    "title" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
+    "title" VARCHAR(255) NOT NULL,
     "description" TEXT,
     "date" TIMESTAMP(3) NOT NULL,
-    "trainer" TEXT NOT NULL,
+    "trainer" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "training_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "employee_training" (
-    "id" BIGSERIAL NOT NULL,
+    "id" SERIAL NOT NULL,
     "employee_id" UUID NOT NULL,
-    "training_id" BIGINT NOT NULL,
+    "training_id" INTEGER NOT NULL,
     "status" "TrainingStatus" NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "employee_training_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "loan" (
-    "id" BIGSERIAL NOT NULL,
+    "id" SERIAL NOT NULL,
     "employee_id" UUID NOT NULL,
     "amount" DECIMAL(10,2) NOT NULL,
     "loan_date" TIMESTAMP(3) NOT NULL,
     "installment" DECIMAL(10,2) NOT NULL,
     "status" "LoanStatus" NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "loan_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "country" (
-    "id" BIGSERIAL NOT NULL,
-    "name" TEXT,
-    "alt_name" TEXT,
+    "id" SERIAL NOT NULL,
+    "name" VARCHAR(255),
+    "alt_name" VARCHAR(255),
     "latitude" DECIMAL(10,7),
     "longitude" DECIMAL(10,7),
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "country_pkey" PRIMARY KEY ("id")
 );
@@ -229,11 +262,14 @@ CREATE TABLE "country" (
 -- CreateTable
 CREATE TABLE "province" (
     "id" BIGSERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-    "alt_name" TEXT,
+    "name" VARCHAR(255),
+    "alt_name" VARCHAR(255),
     "latitude" DECIMAL(10,7),
     "longitude" DECIMAL(10,7),
-    "country_id" BIGINT NOT NULL,
+    "country_id" INTEGER NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "province_pkey" PRIMARY KEY ("id")
 );
@@ -241,11 +277,14 @@ CREATE TABLE "province" (
 -- CreateTable
 CREATE TABLE "city" (
     "id" BIGSERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-    "alt_name" TEXT,
+    "name" VARCHAR(255),
+    "alt_name" VARCHAR(255),
     "latitude" DECIMAL(10,7),
     "longitude" DECIMAL(10,7),
     "province_id" BIGINT NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "city_pkey" PRIMARY KEY ("id")
 );
@@ -253,11 +292,14 @@ CREATE TABLE "city" (
 -- CreateTable
 CREATE TABLE "district" (
     "id" BIGSERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-    "alt_name" TEXT,
+    "name" VARCHAR(255),
+    "alt_name" VARCHAR(255),
     "latitude" DECIMAL(10,7),
     "longitude" DECIMAL(10,7),
     "city_id" BIGINT NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "district_pkey" PRIMARY KEY ("id")
 );
@@ -265,13 +307,71 @@ CREATE TABLE "district" (
 -- CreateTable
 CREATE TABLE "village" (
     "id" BIGSERIAL NOT NULL,
-    "name" TEXT NOT NULL,
-    "alt_name" TEXT,
+    "name" VARCHAR(255),
+    "alt_name" VARCHAR(255),
     "latitude" DECIMAL(10,7),
     "longitude" DECIMAL(10,7),
     "district_id" BIGINT NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
 
     CONSTRAINT "village_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "gender" (
+    "id" SERIAL NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
+
+    CONSTRAINT "gender_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "blood_type" (
+    "id" SERIAL NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
+
+    CONSTRAINT "blood_type_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "religion" (
+    "id" SERIAL NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
+
+    CONSTRAINT "religion_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "married_status" (
+    "id" SERIAL NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
+
+    CONSTRAINT "married_status_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "citizen_status" (
+    "id" SERIAL NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "deleted_at" TIMESTAMP(3),
+
+    CONSTRAINT "citizen_status_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -304,6 +404,21 @@ CREATE UNIQUE INDEX "role_permission_role_id_permission_id_key" ON "role_permiss
 -- CreateIndex
 CREATE UNIQUE INDEX "employee_training_employee_id_training_id_key" ON "employee_training"("employee_id", "training_id");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "gender_name_key" ON "gender"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "blood_type_name_key" ON "blood_type"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "religion_name_key" ON "religion"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "married_status_name_key" ON "married_status"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "citizen_status_name_key" ON "citizen_status"("name");
+
 -- AddForeignKey
 ALTER TABLE "employee" ADD CONSTRAINT "employee_department_id_fkey" FOREIGN KEY ("department_id") REFERENCES "department"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -312,6 +427,21 @@ ALTER TABLE "employee" ADD CONSTRAINT "employee_position_id_fkey" FOREIGN KEY ("
 
 -- AddForeignKey
 ALTER TABLE "employee" ADD CONSTRAINT "employee_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "employee" ADD CONSTRAINT "employee_gender_id_fkey" FOREIGN KEY ("gender_id") REFERENCES "gender"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "employee" ADD CONSTRAINT "employee_blood_type_id_fkey" FOREIGN KEY ("blood_type_id") REFERENCES "blood_type"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "employee" ADD CONSTRAINT "employee_religion_id_fkey" FOREIGN KEY ("religion_id") REFERENCES "religion"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "employee" ADD CONSTRAINT "employee_married_status_id_fkey" FOREIGN KEY ("married_status_id") REFERENCES "married_status"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "employee" ADD CONSTRAINT "employee_citizen_status_id_fkey" FOREIGN KEY ("citizen_status_id") REFERENCES "citizen_status"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "employee" ADD CONSTRAINT "employee_country_id_fkey" FOREIGN KEY ("country_id") REFERENCES "country"("id") ON DELETE CASCADE ON UPDATE CASCADE;

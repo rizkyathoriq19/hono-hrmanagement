@@ -23,8 +23,8 @@ model Employee {
   image             String?             @db.VarChar(255)
   birth_date        DateTime
   birth_place       String?             @db.VarChar(255)
-  gender            Gender
-  blood_type        BloodType?
+  gender_id         Int              
+  blood_type_id     Int?             
   address           String              @db.VarChar(255)
   village_id        BigInt
   district_id       BigInt
@@ -32,10 +32,9 @@ model Employee {
   province_id       BigInt
   country_id        Int
   zip_code          String              @db.VarChar(10)
-  religion          Religion
-  married_status    MarriedStatus
-  citizen_status    CitizenStatus
-  is_active         Boolean
+  religion_id       Int              
+  married_status_id Int              
+  citizen_status_id Int              
   rfid_tag          String?             @db.Uuid
   qr_code           String?             @db.Uuid
   created_at        DateTime            @default(now())
@@ -45,6 +44,11 @@ model Employee {
   department        Department          @relation(fields: [department_id], references: [id], onDelete: Cascade)
   position          Position            @relation(fields: [position_id], references: [id], onDelete: Cascade)
   role              Role                @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  gender            Gender              @relation(fields: [gender_id], references: [id], onDelete: Cascade)
+  blood_type        BloodType?          @relation(fields: [blood_type_id], references: [id], onDelete: Cascade)
+  religion          Religion            @relation(fields: [religion_id], references: [id], onDelete: Cascade)
+  married_status    MarriedStatus       @relation(fields: [married_status_id], references: [id], onDelete: Cascade)
+  citizen_status    CitizenStatus       @relation(fields: [citizen_status_id], references: [id], onDelete: Cascade)
   trainings         EmployeeTraining[]
   leaves            Leave[]
   loans             Loan[]
@@ -335,45 +339,64 @@ model Village {
   @@map("village")
 }
 
+model Gender {
+  id               Int        @id @default(autoincrement())
+  name             String     @unique @db.VarChar(255)
+  created_at       DateTime   @default(now())
+  updated_at       DateTime   @default(now())   @updatedAt
+  deleted_at       DateTime?
+  employees        Employee[]
+
+  @@map("gender")
+}
+
+model BloodType {
+  id               Int        @id @default(autoincrement())
+  name             String     @unique @db.VarChar(255)
+  created_at       DateTime   @default(now())
+  updated_at       DateTime   @default(now())   @updatedAt
+  deleted_at       DateTime?
+  employees        Employee[]
+
+  @@map("blood_type")
+}
+
+model Religion {
+  id               Int        @id @default(autoincrement())
+  name             String     @unique @db.VarChar(255)
+  created_at       DateTime   @default(now())
+  updated_at       DateTime   @default(now())   @updatedAt
+  deleted_at       DateTime?
+  employees        Employee[]
+
+  @@map("religion")
+}
+
+model MarriedStatus {
+  id               Int        @id @default(autoincrement())
+  name             String     @unique @db.VarChar(255)
+  created_at       DateTime   @default(now())
+  updated_at       DateTime   @default(now())   @updatedAt
+  deleted_at       DateTime?
+  employees        Employee[]
+
+  @@map("married_status")
+}
+
+model CitizenStatus {
+  id               Int        @id @default(autoincrement())
+  name             String     @unique @db.VarChar(255)
+  created_at       DateTime   @default(now())
+  updated_at       DateTime   @default(now())   @updatedAt
+  deleted_at       DateTime?
+  employees        Employee[]
+
+  @@map("citizen_status")
+}
+
 enum Status {
   ACTIVE
   INACTIVE
-}
-
-enum Gender {
-  MALE
-  FEMALE
-}
-
-enum BloodType {
-  A
-  B
-  AB
-  O
-}
-
-enum Religion {
-  ISLAM
-  CHRISTIAN
-  CATHOLIC
-  HINDU
-  BUDDHIST
-  CONFUCIAN
-  OTHER
-}
-
-enum MarriedStatus {
-  SINGLE
-  MARRIED
-  DIVORCED
-  WIDOWED
-}
-
-enum CitizenStatus {
-  CITIZEN
-  PERMANENT_RESIDENT
-  TEMPORARY_RESIDENT
-  FOREIGNER
 }
 
 enum AttendanceStatus {
