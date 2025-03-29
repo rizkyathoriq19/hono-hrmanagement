@@ -110,4 +110,69 @@ export const dropdownController = {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
         }
     },
+
+    async getGender(c: Context) { 
+        try {
+            const user = c.get("employee")
+            if (!user) return res(c, 'err', 401, "Unauthorized")
+            
+            const result = await dropdownModel.getGender()
+
+            return res(c, 'getDetail', 200, "Get country success", result.map(formatDropdown))
+        } catch (error) {
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
+        }        
+    },
+
+    async getBloodType(c: Context) { 
+        try {
+            const user = c.get("employee")
+            if (!user) return res(c, 'err', 401, "Unauthorized")
+            
+            const result = await dropdownModel.getBloodType()
+
+            return res(c, 'getDetail', 200, "Get country success", result.map(formatDropdown))
+        } catch (error) {
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
+        }        
+    },
+
+    async getReligion(c: Context) { 
+        try {
+            const user = c.get("employee")
+            if (!user) return res(c, 'err', 401, "Unauthorized")
+            
+            const result = await dropdownModel.getReligion()
+
+            return res(c, 'getDetail', 200, "Get country success", result.map(formatDropdown))
+        } catch (error) {
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
+        }        
+    },
+
+    async getMarriedStatus(c: Context) { 
+        try {
+            const user = c.get("employee")
+            if (!user) return res(c, 'err', 401, "Unauthorized")
+            
+            const result = await dropdownModel.getMarriedStatus()
+
+            return res(c, 'getDetail', 200, "Get country success", result.map(formatDropdown))
+        } catch (error) {
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
+        }        
+    },
+    
+    async getCitizenStatus(c: Context) { 
+        try {
+            const user = c.get("employee")
+            if (!user) return res(c, 'err', 401, "Unauthorized")
+            
+            const result = await dropdownModel.getCitizenStatus()
+
+            return res(c, 'getDetail', 200, "Get country success", result.map(formatDropdown))
+        } catch (error) {
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error")
+        }        
+    },
 }

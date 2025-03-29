@@ -62,4 +62,39 @@ export const dropdownModel = {
             WHERE district_id = ${districId}
         `
     },
+
+    async getGender() {
+        return await prisma.$queryRaw<{id: number, name: string}[]>`
+            SELECT id, name
+            FROM gender
+        `
+    },
+
+    async getBloodType() {
+        return await prisma.$queryRaw<{id: number, name: string}[]>`
+            SELECT id, name
+            FROM blood_type
+        `
+    },
+    
+    async getReligion() {
+        return await prisma.$queryRaw<{id: number, name: string}[]>`
+            SELECT id, name
+            FROM religion
+        `
+    },
+    
+    async getMarriedStatus() {
+        return await prisma.$queryRaw<{id: number, name: string}[]>`
+            SELECT id, name
+            FROM married_status
+        `
+    },
+    
+    async getCitizenStatus() {
+        return await prisma.$queryRaw<{id: number, name: string}[]>`
+            SELECT id, name
+            FROM citizen_status
+        `
+    },    
 }
