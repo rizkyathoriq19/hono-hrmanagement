@@ -16,10 +16,10 @@ export const roleModel = {
         `
     },
 
-    async add(id: number, name: string) { 
+    async add(name: string) { 
         return await prisma.$executeRaw`
-            INSERT INTO role (id, name)
-            VALUES (${id}, ${name})
+            INSERT INTO role (name)
+            VALUES (${name})
         `
     },
 

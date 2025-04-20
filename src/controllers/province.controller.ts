@@ -1,6 +1,7 @@
 import { Context } from "hono"
 import { provinceModel } from "@/models/province.model"
 import { res } from "@/utils/response"
+import { provinceService } from "@/services/province.service"
 
 export const provinceController = {
     async getAll(c: Context) { 
@@ -10,7 +11,7 @@ export const provinceController = {
             
             const result = await provinceModel.getAll()
 
-            return res(c, "get", 200, "Get all province success", result)
+            return res(c, "get", 200, "Get all province success", result.map(provinceService.format))
         } catch (error) {
             return res(c, "err", 500, error instanceof Error ? error.message : "Internal server error")
         }
@@ -35,8 +36,7 @@ export const provinceController = {
             const user = c.get("employee")
             if (!user) return res(c, "err", 401, "Unauthorized")
             
-            const { id, country_id, name, alt_name, latitude, longitude } = await c.req.json<{
-                id: number,
+            const { country_id, name, alt_name, latitude, longitude } = await c.req.json<{
                 country_id: number,
                 name: string,
                 alt_name: string,
@@ -44,8 +44,15 @@ export const provinceController = {
                 longitude: number
             }>()
 
-            const result = await provinceModel.add(id, country_id, name, alt_name, latitude, longitude)
-            return res(c, "post", 201, "Add province success", result)
+            let id = await provinceModel.getTotal() as { total: number }[]
+            if (id.length > 0) { 
+                const lastId = Number(id[0].total)
+                if (lastId) {
+                    const newId = lastId + 1
+                    const result = await provinceModel.add(newId, country_id, name, alt_name, latitude, longitude)
+                    return res(c, "post", 201, "Add province success", result)
+                }
+            }
         } catch (error) {
             return res(c, "err", 500, error instanceof Error ? error.message : "Internal server error")
         }

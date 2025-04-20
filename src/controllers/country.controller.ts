@@ -35,16 +35,21 @@ export const countryController = {
             const user = c.get("employee")
             if (!user) return res(c, "err", 401, "Unauthorized")
             
-            const { id, name, alt_name, latitude, longitude } = await c.req.json<{
-                id: number,
+            const { name, alt_name } = await c.req.json<{
                 name: string,
                 alt_name: string,
-                latitude: number,
-                longitude: number
             }>()
 
-            const result = await countryModel.add(id, name, alt_name, latitude, longitude)
-            return res(c, "post", 201, "Add country success", result)
+            let id = await countryModel.getTotal() as { total: number }[]
+            if (id.length > 0) { 
+                const lastId = Number(id[0].total)
+                if (lastId) {
+                    const newId = lastId + 1
+                    const result = await countryModel.add(newId, name, alt_name)
+                    return res(c, "post", 201, "Add country success", result)
+                }
+            }
+
         } catch (error) {
             return res(c, "err", 500, error instanceof Error ? error.message : "Internal server error")
         }
@@ -56,14 +61,12 @@ export const countryController = {
             if (!user) return res(c, "err", 401, "Unauthorized")
             
             const id = Number(c.req.param("id"))
-            const { name, alt_name, latitude, longitude } = await c.req.json<{
+            const { name, alt_name } = await c.req.json<{
                 name: string, 
-                alt_name: string,
-                latitude: number,
-                longitude: number
+                alt_name: string
             }>()
             
-            const result = await countryModel.update(id, name, alt_name, latitude, longitude)
+            const result = await countryModel.update(id, name, alt_name)
             return res(c, "put", 200, "Update country success", result)
         } catch (error) {
             return res(c, "err", 500, error instanceof Error ? error.message : "Internal server error")

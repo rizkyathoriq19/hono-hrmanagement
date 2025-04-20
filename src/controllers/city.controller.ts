@@ -1,6 +1,7 @@
 import { Context } from "hono"
 import { cityModel } from "@/models/city.model"
 import { res } from "@/utils/response"
+import { cityService } from "@/services/city.service"
 
 export const cityController = {
     async getAll(c: Context) { 
@@ -10,7 +11,7 @@ export const cityController = {
             
             const result = await cityModel.getAll()
 
-            return res(c, "get", 200, "Get all city success", result)
+            return res(c, "get", 200, "Get all city success", result.map(cityService.format))
         } catch (error) {
             return res(c, "err", 500, error instanceof Error ? error.message : "Internal server error")
         }
@@ -35,8 +36,8 @@ export const cityController = {
             const user = c.get("employee")
             if (!user) return res(c, "err", 401, "Unauthorized")
             
-            const { id, province_id, name, alt_name, latitude, longitude } = await c.req.json<{
-                id: number,
+            
+            const { province_id, name, alt_name, latitude, longitude } = await c.req.json<{
                 province_id: number,
                 name: string,
                 alt_name: string,
@@ -44,8 +45,17 @@ export const cityController = {
                 longitude: number
             }>()
 
-            const result = await cityModel.add(id, province_id, name, alt_name, latitude, longitude)
-            return res(c, "post", 201, "Add city success", result)
+
+            let id = await cityModel.getLastId(province_id) as { id: number }[]
+            if (id.length > 0) { 
+                const lastId = Number(id[0].id)
+                if (lastId) {
+                    const newId = lastId + 1
+                    const result = await cityModel.add(newId, province_id, name, alt_name, latitude, longitude)
+                    return res(c, "post", 201, "Add city success", result)
+                }
+            }
+            
         } catch (error) {
             return res(c, "err", 500, error instanceof Error ? error.message : "Internal server error")
         }

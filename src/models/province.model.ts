@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/encryption"
+import { IProvince } from "@/types/province.type"
 
 export const provinceModel = {
     async getAll() { 
-        return await prisma.$queryRaw`
+        return await prisma.$queryRaw<IProvince[]>`
             SELECT p.id, p.name, p.alt_name, c.id as country_id, c.name as country_name, p.created_at, p.updated_at, p.deleted_at 
             FROM province p
-            JOIN country c ON p.id = p.country_id
+            JOIN country c ON c.id = p.country_id
         `
     },
 
@@ -37,6 +38,13 @@ export const provinceModel = {
         return await prisma.$executeRaw`
             DELETE FROM province
             WHERE id = ${id}
+        `
+    },
+
+    async getTotal() { 
+        return await prisma.$queryRaw<{total: number}[]>`
+            SELECT COUNT(*) as total
+            FROM province
         `
     }
 }

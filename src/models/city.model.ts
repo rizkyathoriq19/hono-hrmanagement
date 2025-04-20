@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/encryption"
+import { ICity } from "@/types/city.type"
 
 export const cityModel = {
     async getAll() { 
-        return await prisma.$queryRaw`
+        return await prisma.$queryRaw<ICity[]>`
             SELECT c.id, c.name, c.alt_name, p.id as province_id, p.name as province_name, c.created_at, c.updated_at, c.deleted_at 
             FROM city c
             JOIN province p ON p.id = c.province_id
@@ -37,6 +38,16 @@ export const cityModel = {
         return await prisma.$executeRaw`
             DELETE FROM city
             WHERE id = ${id}
+        `
+    },
+
+    async getLastId(id: number) {
+        return await prisma.$queryRaw<{ id: number }[]>`
+            SELECT id
+            FROM city
+            WHERE CAST(id AS TEXT) LIKE ${id.toString() + '%'}
+            ORDER BY id DESC
+            LIMIT 1
         `
     }
 }

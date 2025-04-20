@@ -5,6 +5,16 @@ import { employeeService } from "@/services/employee.service"
 import { res } from "@/utils/response"
 import { TRegister, TUpdate, TStatus } from "@/types/employee.type"
 import cloudinary from "@/utils/cloudinary"
+import xlsx from "xlsx"
+import { departmentModel } from "@/models/department.model"
+import { positionModel } from "@/models/position.model"
+import { roleModel } from "@/models/role.model"
+import { dropdownModel } from "@/models/dropdown.model"
+import { countryModel } from "@/models/country.model"
+import { provinceModel } from "@/models/province.model"
+import { cityModel } from "@/models/city.model"
+import { districtModel } from "@/models/district.model"
+import { villageModel } from "@/models/village.model"
 
 const registerValidationSchema = z.object({
     code: z.string().nonempty({ message: "ID is required" }),
@@ -223,6 +233,65 @@ export const employeeController = {
             const generateCode = await employeeService.generateEmployeeCode(date, department_id)
 
             return res(c, 'getDetail', 200, "Generate employee code success", generateCode)
+        } catch (error) {
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error") 
+        }
+    },
+
+    async uploadFile(c: Context) {
+        try {
+            const body = await c.req.parseBody()
+            const file = body['employee'] as File
+
+            if (!file) return res(c, 'err', 404, "File not found")
+
+            const arrayBuffer = await file.arrayBuffer()
+            const buffer = Buffer.from(arrayBuffer)
+
+            const workBook = xlsx.read(buffer, { type: 'buffer' })
+            const sheetName = workBook.SheetNames[0]
+            const sheet = workBook.Sheets[sheetName]
+
+            const data: TRegister[] = xlsx.utils.sheet_to_json<TRegister>(sheet)
+            if (!data) return res(c, 'err', 400, "File not valid")
+            
+            const department = await departmentModel.getAll() as unknown as { id: string, name: string }[]
+            const position = await positionModel.getAll() as unknown as { id: string, name: string }[]
+            const role = await roleModel.getAll() as unknown as { id: number, name: string }[]
+            const gender = await dropdownModel.getGender() as unknown as { id: number, name: string }[]
+            const bloodType = await dropdownModel.getBloodType() as unknown as { id: number, name: string }[]
+            const country = await countryModel.getAll() as unknown as { id: number, name: string }[]
+            const province = await provinceModel.getAll() as unknown as { id: number, name: string }[]
+            const city = await cityModel.getAll() as unknown as { id: number, name: string }[]
+            const district = await districtModel.getAll() as unknown as { id: number, name: string }[]
+            const village = await villageModel.getAll() as unknown as { id: number, name: string }[]
+            const religion = await dropdownModel.getReligion() as unknown as { id: number, name: string }[]
+            const marriedStatus = await dropdownModel.getMarriedStatus() as unknown as { id: number, name: string }[]
+            const citizenStatus = await dropdownModel.getCitizenStatus() as unknown as { id: number, name: string }[]
+
+            const departmentMap = new Map(department.map((d) => [d.name, d.id]))
+            const positionMap = new Map(position.map((p) => [p.name, p.id]))
+            const roleMap = new Map(role.map((r) => [r.name, r.id]))
+            const genderMap = new Map(gender.map((g) => [g.name, g.id]))
+            const bloodTypeMap = new Map(bloodType.map((b) => [b.name, b.id]))
+            const countryMap = new Map(country.map((c) => [c.name, c.id]))
+            const provinceMap = new Map(province.map((p) => [p.name, p.id]))
+            const cityMap = new Map(city.map((c) => [c.name, c.id]))
+            const districtMap = new Map(district.map((d) => [d.name, d.id]))
+            const villageMap = new Map(village.map((v) => [v.name, v.id]))
+            const religionMap = new Map(religion.map((r) => [r.name, r.id]))
+            const marriedStatusMap = new Map(marriedStatus.map((m) => [m.name, m.id]))
+            const citizenStatusMap = new Map(citizenStatus.map((c) => [c.name, c.id]))
+            
+
+        } catch (error) {
+            return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error") 
+        }
+    },
+
+    async exportFile(c: Context) {
+        try {
+
         } catch (error) {
             return res(c, 'err', 500, error instanceof Error ? error.message : "Internal server error") 
         }

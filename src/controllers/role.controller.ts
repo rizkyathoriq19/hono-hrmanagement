@@ -35,9 +35,9 @@ export const roleController = {
             const user = c.get("employee")
             if (!user) return res(c, "err", 401, "Unauthorized")
             
-            const { id, name } = await c.req.json<{ id: number, name: string }>()
+            const { name } = await c.req.json<{ name: string }>()
 
-            const result = await roleModel.add(id, name)
+            const result = await roleModel.add(name)
             return res(c, "post", 201, "Add role success", result)
         } catch (error) {
             return res(c, "err", 500, error instanceof Error ? error.message : "Internal server error")

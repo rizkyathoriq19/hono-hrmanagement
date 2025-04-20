@@ -6,7 +6,7 @@ export const positionModel = {
             SELECT p.id, p.name, p.alt_name, d.id as department_id, d.name as department_name, p.created_at, p.updated_at, p.deleted_at 
             FROM position p
             JOIN department d ON d.id = p.department_id
-            ORDER BY d.name ASC
+            ORDER BY p.name ASC
         `
     },
 

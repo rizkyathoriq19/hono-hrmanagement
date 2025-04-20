@@ -11,6 +11,7 @@ import { districtSwagger } from "./district.swagger"
 import { villageSwagger } from "./village.swagger"
 import { departmentSwagger } from "./department.swagger"
 import { positionSwagger } from "./position.swagger"
+import { roleSwagger } from "./role.swagger"
 
 const swagger = new OpenAPIHono()
 
@@ -36,6 +37,13 @@ swagger.openAPIRegistry.registerPath(dropdownSwagger.getBloodTypeRoute())
 swagger.openAPIRegistry.registerPath(dropdownSwagger.getReligionRoute())
 swagger.openAPIRegistry.registerPath(dropdownSwagger.getMarriedStatusRoute())
 swagger.openAPIRegistry.registerPath(dropdownSwagger.getCitizenStatusRoute())
+
+// Role
+swagger.openAPIRegistry.registerPath(roleSwagger.getRole())
+swagger.openAPIRegistry.registerPath(roleSwagger.getRoleByIdRoute())
+swagger.openAPIRegistry.registerPath(roleSwagger.addRoleRoute())
+swagger.openAPIRegistry.registerPath(roleSwagger.updateRoleRoute())
+swagger.openAPIRegistry.registerPath(roleSwagger.deleteRoleRoute())
 
 // Country
 swagger.openAPIRegistry.registerPath(countrySwagger.getCountryRoute())

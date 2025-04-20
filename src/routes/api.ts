@@ -13,6 +13,7 @@ import { provinceController } from "@/controllers/province.controller"
 import { cityController } from "@/controllers/city.controller"
 import { districtController } from "@/controllers/district.controller"
 import { villageController } from "@/controllers/village.controller"
+import { roleController } from "@/controllers/role.controller"
 
 const r = new Hono()
 
@@ -32,6 +33,13 @@ r.get("/position/:id", authMiddleware, positionController.getById)
 r.post("/position/add", authMiddleware, positionController.add)
 r.put("/position/update/:id", authMiddleware, positionController.update)
 r.delete("/position/delete/:id", authMiddleware, positionController.delete)
+
+// Role
+r.get("/role/all", authMiddleware, roleMiddleware("view_role"), roleController.getAll)
+r.get("/role/:id", authMiddleware, roleMiddleware("view_role"), roleController.getById)
+r.post("/role/add", authMiddleware, roleMiddleware("create_role"), roleController.add)
+r.put("/role/update/:id", authMiddleware, roleMiddleware("update_role"), roleController.update)
+r.delete("/role/delete/:id", authMiddleware, roleMiddleware("delete_role"), roleController.delete)
 
 // Country
 r.get("/country/all", authMiddleware, countryController.getAll)
@@ -91,6 +99,7 @@ r.put("/employee/update/:id", authMiddleware, roleMiddleware("update_employee"),
 r.patch("/employee/status/:id", authMiddleware, roleMiddleware("update_employee"), employeeController.statusEmployee)
 r.delete("/employee/delete/:id", authMiddleware, roleMiddleware("delete_employee"), employeeController.deleteEmployee)
 r.post("/employee/generate-code", authMiddleware, roleMiddleware("create_employee"), employeeController.generateEmployeeCode)
+r.post("/employee/upload", authMiddleware, roleMiddleware("create_employee"), employeeController.uploadFile)
 
 // Attendance
 r.get("/attendance/all", authMiddleware, roleMiddleware("view_attendance"), attendanceController.getAll)

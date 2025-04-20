@@ -16,17 +16,24 @@ export const countryModel = {
         `
     },
 
-    async add(id: number, name: string, alt_name: string, latitude: number, longitude: number) { 
-        return await prisma.$executeRaw`
-            INSERT INTO country (id, name, alt_name, latitude, longitude)
-            VALUES (${id}, ${name}, ${alt_name}, ${latitude}, ${longitude})
+    async getTotal() {
+        return await prisma.$queryRaw<{total: number}[]>`
+            SELECT COUNT(*) as total
+            FROM country
         `
     },
 
-    async update(id: number, name: string, alt_name: string, latitude: number, longitude: number) { 
+    async add(id: number, name: string, alt_name: string) { 
+        return await prisma.$executeRaw`
+            INSERT INTO country (id, name, alt_name)
+            VALUES (${id}, ${name}, ${alt_name})
+        `
+    },
+
+    async update(id: number, name: string, alt_name: string) { 
         return await prisma.$executeRaw`
             UPDATE country
-            SET name = ${name}, alt_name = ${alt_name}, latitude = ${latitude}, longitude = ${longitude}
+            SET name = ${name}, alt_name = ${alt_name}
             WHERE id = ${id}
         `
     },
